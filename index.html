@@ -540,6 +540,157 @@ Concept by BanRap
 Ver.2.0.0
 </div>
 
+
+
+function selectPrep(btn,m){
+
+clear("#prepButtons");
+
+btn.classList.add("selected");
+
+prepStatus=m;
+
+}
+
+function selectLunch(btn,m){
+
+clear("#lunchButtons");
+
+btn.classList.add("selected");
+
+lunchNeeded=m;
+
+}
+
+function clear(id){
+
+document.querySelectorAll(id+" button")
+.forEach(b=>b.classList.remove("selected"));
+
+}
+
+function resetAll(){
+
+selectedMood="";
+selectedEnergy="";
+prepStatus="";
+lunchNeeded=false;
+
+document.querySelectorAll(".selected")
+.forEach(x=>x.classList.remove("selected"));
+
+document.getElementById("results").innerHTML="";
+document.getElementById("loader").innerHTML="";
+
+}
+
+function getMealHistory(){
+
+return JSON.parse(
+localStorage.getItem("mealHistory")||"[]"
+);
+
+}
+
+function calculateMealScore(meal){
+
+let score=0;
+
+const today=
+new Date().toLocaleDateString(
+'en-US',
+{weekday:'long'}
+);
+
+if(meal.moods.includes(selectedMood))
+score+=4;
+
+if(meal.effort===selectedEnergy)
+score+=3;
+
+if(meal.prep===prepStatus)
+score+=3;
+
+if(meal.lunch===lunchNeeded)
+score+=3;
+
+if(meal.bestDays.includes(today))
+score+=3;
+
+const history=getMealHistory();
+
+const recent=
+history.find(h=>h.name===meal.name);
+
+if(recent)
+score-=meal.repeatGap;
+
+return score;
+
+}
+
+function generateRecommendations(){
+
+document.getElementById("loader")
+.innerHTML=
+"<div class='loader'>Thinking about tonight’s dinner... 🍲</div>";
+
+setTimeout(()=>{
+
+document.getElementById("loader").innerHTML="";
+
+const rankedMeals=
+meals.map(meal=>{
+
+return{
+meal,
+score:calculateMealScore(meal)
+};
+
+})
+
+.sort((a,b)=>b.score-a.score)
+
+.slice(0,3);
+
+let html="";
+
+rankedMeals.forEach((item,i)=>{
+
+const meal=item.meal;
+
+const reason=
+meal.reasons[
+Math.floor(Math.random()*meal.reasons.length)
+];
+
+html+=`
+
+<div class="recommendation">
+
+<div class="meal-title">
+${["🥇","🥈","🥉"][i]}
+${meal.name}
+</div>
+
+<div class="reason">
+${reason}
+</div>
+
+<button class="ate-btn"
+onclick="saveMeal('${meal.name}')">
+
+We Ate This
+
+</button>
+
+</div>
+
+  <!--
+REPLACE ONLY THE ENTIRE <script>...</script> SECTION
+WITH THIS VERSION 2.1 SCRIPT
+-->
+
 <script>
 
 let selectedUser="";
@@ -552,151 +703,171 @@ const meals=[
 
 {
 name:"Egg Fried Rice",
+category:"rice",
+special:false,
 moods:["comfort","lazy"],
 effort:"medium",
 prep:"done",
 lunch:false,
 bestDays:["Friday","Saturday"],
-repeatGap:5,
+prepTip:"Cook rice beforehand for best texture.",
 reasons:[
-"Perfect comfort meal for low-energy evenings.",
-"Best enjoyed fresh during dinner.",
-"Great indulgent Friday option."
+"Comfort-heavy meal for relaxed evenings.",
+"Fresh dinner option with strong satisfaction.",
+"Excellent Friday comfort food."
 ]
 },
 
 {
 name:"Moong Dal Chila",
+category:"healthy",
+special:false,
 moods:["healthy","different"],
 effort:"medium",
 prep:"done",
 lunch:true,
 bestDays:["Sunday","Monday"],
-repeatGap:4,
+prepTip:"Prepare batter beforehand for smoother cooking.",
 reasons:[
-"Healthy protein-rich option.",
+"Protein-rich healthy dinner.",
 "Works beautifully for next-day lunch.",
-"Feels light yet filling."
+"Feels light but satisfying."
 ]
 },
 
 {
 name:"Pav Bhaji",
+category:"special",
+special:true,
 moods:["comfort","different"],
 effort:"high",
 prep:"done",
 lunch:true,
 bestDays:["Saturday","Sunday"],
-repeatGap:10,
+prepTip:"Boil vegetables earlier to reduce night effort.",
 reasons:[
-"One of Koyel’s speciality comfort meals.",
-"Excellent when prep is already handled.",
-"Feels rewarding on relaxed evenings."
+"Koyel speciality comfort meal.",
+"Relaxed weekend-worthy dinner.",
+"Feels rewarding and comforting."
 ]
 },
 
 {
 name:"Bhindi Sabzi",
+category:"sabzi",
+special:false,
 moods:["comfort","healthy"],
 effort:"medium",
 prep:"cant",
 lunch:false,
 bestDays:["Monday","Tuesday","Wednesday"],
-repeatGap:5,
+prepTip:"Pairs beautifully with dal if available.",
 reasons:[
-"Reliable comfort dinner.",
-"Pairs beautifully with chapati and dal.",
-"Simple emotionally satisfying meal."
+"Reliable home-style comfort.",
+"Simple emotionally satisfying meal.",
+"Low-drama weekday dinner."
 ]
 },
 
 {
 name:"Paneer Gravy",
+category:"paneer",
+special:false,
 moods:["comfort"],
 effort:"medium",
 prep:"cant",
 lunch:true,
 bestDays:["Sunday","Monday"],
-repeatGap:6,
+prepTip:"Rice pairing works well for tomorrow lunch.",
 reasons:[
-"Good carry-forward meal for lunch.",
-"Comforting and filling.",
-"Rice pairing works nicely next day."
+"Comfort-heavy carry-forward meal.",
+"Good next-day lunch compatibility.",
+"Stable cozy dinner option."
 ]
 },
 
 {
 name:"Veg Pasta",
+category:"pasta",
+special:true,
 moods:["different","comfort"],
 effort:"medium",
 prep:"cant",
 lunch:true,
 bestDays:["Friday","Saturday"],
-repeatGap:8,
+prepTip:"Cook slightly extra if lunch needed tomorrow.",
 reasons:[
-"Balanced comfort and novelty.",
-"Good quantity meal.",
-"Useful for next-day lunch planning."
+"Balanced novelty and comfort.",
+"Feels different without being exhausting.",
+"Weekend-friendly dinner."
 ]
 },
 
 {
 name:"Egg Curry",
+category:"egg",
+special:false,
 moods:["comfort","healthy"],
 effort:"medium",
 prep:"cant",
 lunch:true,
 bestDays:["Sunday","Wednesday"],
-repeatGap:4,
+prepTip:"Rice pairing improves next-day lunch.",
 reasons:[
-"Good protein-heavy comfort option.",
-"Carries beautifully with rice next day.",
-"Useful when proper lunch is needed."
+"Protein-heavy comfort option.",
+"Very useful lunch carry-forward meal.",
+"Strong balanced dinner."
 ]
 },
 
 {
 name:"Veg Maggi",
+category:"comfort",
+special:false,
 moods:["lazy","comfort"],
 effort:"low",
 prep:"cant",
 lunch:false,
 bestDays:["Friday","Saturday"],
-repeatGap:3,
+prepTip:"Add vegetables if energy allows.",
 reasons:[
-"Emergency comfort food.",
+"Emergency comfort fallback.",
 "Minimal emotional effort required.",
-"Good exhausted-evening fallback."
+"Perfect tired-evening shortcut."
 ]
 },
 
 {
 name:"Lauki Sabzi",
+category:"healthy",
+special:false,
 moods:["healthy"],
 effort:"medium",
 prep:"cant",
 lunch:true,
 bestDays:["Tuesday","Thursday"],
-repeatGap:6,
+prepTip:"Works best with fresh chapatis.",
 reasons:[
-"Light healthy weekday meal.",
-"Works well with chapati.",
-"Good balanced home-style dinner."
+"Balanced weekday meal.",
+"Light healthy dinner.",
+"Good digestion-friendly option."
 ]
 },
 
 {
 name:"Palak Paneer",
+category:"paneer",
+special:true,
 moods:["healthy","comfort"],
 effort:"high",
 prep:"done",
 lunch:true,
 bestDays:["Sunday"],
-repeatGap:12,
+prepTip:"Best when cooking energy is high.",
 reasons:[
-"Nutritious comfort meal.",
-"Best when proper cooking energy exists.",
-"Feels special without being too heavy."
+"Nutritious comfort-heavy dinner.",
+"Feels special and rewarding.",
+"Good Sunday-style meal."
 ]
 }
 
@@ -845,9 +1016,22 @@ localStorage.getItem("mealHistory")||"[]"
 
 }
 
+function daysAgo(dateString){
+
+const then=new Date(dateString);
+const now=new Date();
+
+return Math.floor(
+(now-then)/(1000*60*60*24)
+);
+
+}
+
 function calculateMealScore(meal){
 
 let score=0;
+
+let explanations=[];
 
 const today=
 new Date().toLocaleDateString(
@@ -855,30 +1039,98 @@ new Date().toLocaleDateString(
 {weekday:'long'}
 );
 
-if(meal.moods.includes(selectedMood))
+if(meal.moods.includes(selectedMood)){
 score+=4;
+explanations.push("Matches tonight’s mood");
+}
 
-if(meal.effort===selectedEnergy)
+if(meal.effort===selectedEnergy){
 score+=3;
+explanations.push("Fits available cooking energy");
+}
 
-if(meal.prep===prepStatus)
+if(meal.prep===prepStatus){
 score+=3;
+explanations.push("Matches prep availability");
+}
 
-if(meal.lunch===lunchNeeded)
+if(meal.lunch===lunchNeeded){
 score+=3;
+explanations.push("Good fit for tomorrow lunch planning");
+}
 
-if(meal.bestDays.includes(today))
+if(meal.bestDays.includes(today)){
 score+=3;
+explanations.push("Strong match for "+today);
+}
 
 const history=getMealHistory();
 
-const recent=
-history.find(h=>h.name===meal.name);
+history.forEach(h=>{
 
-if(recent)
-score-=meal.repeatGap;
+if(h.name===meal.name){
 
-return score;
+const age=daysAgo(h.date);
+
+if(age<=1){
+score-=10;
+}
+
+else if(age<=3){
+score-=6;
+}
+
+else if(age<=7){
+score-=3;
+}
+
+}
+
+});
+
+const sameCategory=
+history.filter(h=>{
+
+const oldMeal=
+meals.find(m=>m.name===h.name);
+
+return oldMeal &&
+oldMeal.category===meal.category;
+
+});
+
+if(sameCategory.length>=2){
+
+score-=4;
+
+explanations.push(
+"Similar meals eaten recently"
+);
+
+}
+
+if(meal.special){
+
+const specialRecent=
+history.find(h=>{
+
+const oldMeal=
+meals.find(m=>m.name===h.name);
+
+return oldMeal && oldMeal.special;
+
+});
+
+if(specialRecent){
+score-=5;
+}
+
+}
+
+return{
+score,
+explanations
+};
 
 }
 
@@ -886,7 +1138,7 @@ function generateRecommendations(){
 
 document.getElementById("loader")
 .innerHTML=
-"<div class='loader'>Thinking about tonight’s dinner... 🍲</div>";
+"<div class='loader'>Thinking carefully about tonight’s dinner... 🍲</div>";
 
 setTimeout(()=>{
 
@@ -895,9 +1147,13 @@ document.getElementById("loader").innerHTML="";
 const rankedMeals=
 meals.map(meal=>{
 
+const result=
+calculateMealScore(meal);
+
 return{
 meal,
-score:calculateMealScore(meal)
+score:result.score,
+explanations:result.explanations
 };
 
 })
@@ -912,10 +1168,19 @@ rankedMeals.forEach((item,i)=>{
 
 const meal=item.meal;
 
-const reason=
-meal.reasons[
-Math.floor(Math.random()*meal.reasons.length)
-];
+const explanationText=
+item.explanations.length
+
+?
+
+item.explanations
+.slice(0,3)
+.map(e=>"• "+e)
+.join("<br>")
+
+:
+
+meal.reasons[0];
 
 html+=`
 
@@ -927,7 +1192,14 @@ ${meal.name}
 </div>
 
 <div class="reason">
-${reason}
+
+${explanationText}
+
+<br><br>
+
+<strong>Prep Tip:</strong><br>
+${meal.prepTip}
+
 </div>
 
 <button class="ate-btn"
@@ -943,10 +1215,75 @@ We Ate This
 
 });
 
+const history=getMealHistory();
+
+let avoidText="";
+
+const recentPaneer=
+history.filter(h=>{
+
+const m=
+meals.find(x=>x.name===h.name);
+
+return m && m.category==="paneer";
+
+});
+
+if(recentPaneer.length>=2){
+
+avoidText+=
+"• Paneer-heavy meals recently<br>";
+
+}
+
+const recentEgg=
+history.filter(h=>{
+
+const m=
+meals.find(x=>x.name===h.name);
+
+return m && m.category==="egg";
+
+});
+
+if(recentEgg.length>=2){
+
+avoidText+=
+"• Egg-heavy meals recently<br>";
+
+}
+
+if(selectedEnergy==="low"){
+
+avoidText+=
+"• Heavy cooking may feel exhausting tonight<br>";
+
+}
+
+if(avoidText){
+
+html+=`
+
+<div class="recommendation">
+
+<div class="meal-title">
+⚠ Maybe Avoid Tonight
+</div>
+
+<div class="reason">
+${avoidText}
+</div>
+
+</div>
+
+`;
+
+}
+
 document.getElementById("results")
 .innerHTML=html;
 
-},1200);
+},1400);
 
 }
 
@@ -990,7 +1327,7 @@ date:new Date().toLocaleString()
 
 });
 
-history=history.slice(0,7);
+history=history.slice(0,10);
 
 localStorage.setItem(
 "mealHistory",
@@ -1058,6 +1395,10 @@ if(t)setTheme(t);
 };
 
 </script>
+
+
+
+
 
 </body>
 </html>
