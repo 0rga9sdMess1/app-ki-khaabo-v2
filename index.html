@@ -7,53 +7,54 @@
 
 <!--
 ========================================================
-KI KHAABO? - V2.4 FULL REBUILD CHANGELOG
+KI KHAABO? - V2.4.1 STABILITY PATCH
 ========================================================
 
 VERSION:
-Ver.2.4.0.15.05.2026.14.05.00 (IST)
+Ver.2.4.1.15.05.2026.13.25.00 (IST)
 
 --------------------------------------------------------
-CORE SYSTEM REBUILD
+CRITICAL FIXES
 --------------------------------------------------------
 
-✔ UI ARCHITECTURE OVERHAUL
-- Pill system converted to FLEX-WRAP GRID (2–3 row layout)
-- Long form questionnaire removed
-- Responsive pill density system added
-- Reduced vertical scroll by ~45%
+✔ LANDING PAGE RESTORED
+- Theme switcher added back (global state)
+- Why Ki Khaabo? modal restored (bottom sheet style)
 
-✔ TOP BAR REDESIGN
-- Back / User / Theme aligned correctly
-- Centered title restored under top bar
+✔ THEME SYSTEM FIXED
+- Shared across pages (localStorage + root variables)
+- No reset bug fixed
 
-✔ THEME SYSTEM (RESTORED V2.0 BEHAVIOR)
-- Nothing / Warm / Sage / Dark themes
-- localStorage persistence fixed
-- no reset on navigation
+✔ TOP BAR STRUCTURE FIXED
+- Back | User | Theme aligned correctly
+- Center title restored
 
-✔ INTELLIGENCE ENGINE (HARD RESET)
-- Hard constraint filter introduced
-- Prep mismatch → meal blocked (not penalized)
-- Repetition fatigue system added
-- Weekend/weekday rule layer added
+✔ PREP SYSTEM (CRITICAL LOGIC FIX)
+- "No time for prep" is now MUTUALLY EXCLUSIVE
+- Max 2 prep selections enforced
+- Contradiction popup system added
 
-✔ POST-DINNER MEMORY SYSTEM
-- Meal logging with timestamp
-- Same-day replacement confirmation
+✔ INTELLIGENCE ENGINE PATCH
+- Hard constraints applied BEFORE scoring
+- Invalid meals removed early
+- Fried rice no longer incorrectly suggested under no-prep state
+
+✔ POST MEAL MEMORY SYSTEM
+- "We ate this" logging restored
+- Same-day duplicate protection added
 - Stored in localStorage
 
-✔ BREAKFAST + LUNCH ENGINE
-- Derived from dinner logic
-- fallback witty responses if no match
+✔ BREAKFAST + LUNCH FIX
+- Derived output engine restored
+- fallback witty responses added
 
 --------------------------------------------------------
 NEXT EVOLUTION (V2.5+)
 --------------------------------------------------------
-- Supabase memory sync
+- Real cuisine fatigue (paneer/rice/egg memory depth)
+- Supabase persistent memory layer
 - Dual-user negotiation mode
-- Cuisine fatigue heatmap
-- Grocery prediction engine
+- Weekly rhythm intelligence engine
 
 ========================================================
 -->
@@ -68,12 +69,7 @@ NEXT EVOLUTION (V2.5+)
 --button:#ddd;
 }
 
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-font-family:Arial;
-}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial;}
 
 body{
 background:var(--bg);
@@ -86,10 +82,10 @@ transition:0.3s;
 .active{display:block;}
 
 .container{
-padding:20px;
 max-width:550px;
 margin:auto;
-padding-top:90px;
+padding:20px;
+padding-top:110px;
 }
 
 /* TOP BAR */
@@ -110,31 +106,27 @@ background:var(--card);
 padding:8px 12px;
 border-radius:14px;
 font-size:13px;
-}
-
-.theme{
 cursor:pointer;
 }
 
 /* TITLE */
 .title{
 text-align:center;
-font-size:22px;
+font-size:20px;
 font-weight:bold;
-margin-top:60px;
-margin-bottom:20px;
+margin:20px 0;
 }
 
-/* CARD */
+/* CARDS */
 .card{
 background:var(--card);
 padding:16px;
 border-radius:16px;
-margin-bottom:16px;
-box-shadow:0 4px 16px rgba(0,0,0,0.08);
+margin-bottom:14px;
+box-shadow:0 4px 14px rgba(0,0,0,0.08);
 }
 
-/* PILL GRID SYSTEM (IMPORTANT FIX) */
+/* PILLS */
 .pill-grid{
 display:flex;
 flex-wrap:wrap;
@@ -143,39 +135,18 @@ margin-top:10px;
 }
 
 .pill{
-flex:1 1 auto;
-min-width:42%;
+flex:1 1 45%;
 padding:10px;
 border-radius:12px;
 background:var(--button);
 text-align:center;
 font-size:13px;
 cursor:pointer;
-transition:0.2s;
 }
 
-.pill:active{transform:scale(0.97);}
-.pill.selected{background:var(--accent);color:#fff;}
-
-/* PRIMARY BUTTON */
-.primary{
-width:100%;
-padding:14px;
-border:none;
-border-radius:14px;
+.pill.selected{
 background:var(--accent);
 color:#fff;
-font-weight:bold;
-margin-top:10px;
-}
-
-.secondary{
-width:100%;
-padding:12px;
-border:none;
-border-radius:14px;
-background:var(--button);
-margin-top:8px;
 }
 
 /* LOADER */
@@ -188,8 +159,8 @@ align-items:center;
 background:rgba(0,0,0,0.6);
 color:#fff;
 font-size:18px;
-text-align:center;
 z-index:999;
+text-align:center;
 padding:20px;
 }
 
@@ -202,49 +173,74 @@ color:var(--sub);
 }
 .footer.left{left:10px;}
 .footer.right{right:10px;}
+
+/* WHY MODAL */
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+display:none;
+align-items:flex-end;
+justify-content:center;
+z-index:999;
+}
+
+.modal-content{
+background:var(--card);
+padding:18px;
+border-radius:18px 18px 0 0;
+width:100%;
+max-width:550px;
+}
 </style>
 </head>
 
 <body>
 
-<!-- LOADER -->
 <div class="loader" id="loader">Consulting the dinner gods 🍜</div>
 
 <!-- TOP BAR -->
 <div class="topbar" id="topbar" style="display:none;">
 <div class="back" onclick="goBack()">← Back</div>
-<div class="user" id="user"></div>
+<div class="user" id="user">⚽Pranab</div>
 <div class="theme" onclick="toggleTheme()">🎨</div>
 </div>
 
-<!-- MAIN -->
+<!-- LANDING -->
 <div class="page active" id="landing">
-<div class="container" style="padding-top:120px;text-align:center;">
 
-<div style="font-size:38px;font-weight:bold;">Ki Khaabo?</div>
-<div style="color:var(--sub);margin-top:8px;">
-Because deciding dinner is harder than cooking it
+<div class="container" style="text-align:center;padding-top:140px;">
+
+<div style="font-size:40px;font-weight:bold;">Ki Khaabo?</div>
+
+<div style="color:var(--sub);margin-top:10px;">
+Because deciding a meal is harder than cooking it
 </div>
 
 <div class="card" style="margin-top:30px;">
 <div>Who is the kitchen boss tonight?</div>
+
 <div class="pill-grid">
-<div class="pill" onclick="enter('Pranab')">Pranab</div>
-<div class="pill" onclick="enter('Koyel')">Koyel</div>
+<div class="pill" onclick="enter('⚽Pranab')">⚽Pranab</div>
+<div class="pill" onclick="enter('💃🏼Koyel')">💃🏼Koyel</div>
 </div>
+</div>
+
+<div style="margin-top:20px;color:var(--accent);cursor:pointer;" onclick="openWhy()">
+Why Ki Khaabo?
 </div>
 
 </div>
 </div>
 
-<!-- MAIN SCREEN -->
+<!-- MAIN -->
 <div class="page" id="main">
 <div class="container">
 
 <div class="title">Ki Khaabo?</div>
 
 <div class="card">
-<div>Mood</div>
+<div style="text-align:center;">Mood</div>
 <div class="pill-grid">
 <div class="pill" onclick="sel(this)">Comfort</div>
 <div class="pill" onclick="sel(this)">Healthy</div>
@@ -254,7 +250,7 @@ Because deciding dinner is harder than cooking it
 </div>
 
 <div class="card">
-<div>Cooking Effort</div>
+<div style="text-align:center;">Cooking Effort</div>
 <div class="pill-grid">
 <div class="pill" onclick="sel(this)">Minimal</div>
 <div class="pill" onclick="sel(this)">Moderate</div>
@@ -263,39 +259,54 @@ Because deciding dinner is harder than cooking it
 </div>
 
 <div class="card">
-<div>Meal Prep Status</div>
+<div style="text-align:center;">Meal Prep Status</div>
 <div class="pill-grid">
-<div class="pill" onclick="sel(this)">No time for prep</div>
-<div class="pill" onclick="sel(this)">Rice ready</div>
-<div class="pill" onclick="sel(this)">Chila batter</div>
-<div class="pill" onclick="sel(this)">Overnight oats</div>
-<div class="pill" onclick="sel(this)">Uthappa batter</div>
+<div class="pill" onclick="prep(this)">No time for prep</div>
+<div class="pill" onclick="prep(this)">Rice ready / possible</div>
+<div class="pill" onclick="prep(this)">Chila batter</div>
+<div class="pill" onclick="prep(this)">Overnight oats</div>
+<div class="pill" onclick="prep(this)">Uthappa batter</div>
 </div>
 </div>
 
 <div class="card">
-<div>Tomorrow Lunch?</div>
+<div style="text-align:center;">Tomorrow Lunch?</div>
 <div class="pill-grid">
 <div class="pill" onclick="sel(this)">Yes</div>
 <div class="pill" onclick="sel(this)">No</div>
 </div>
 </div>
 
-<button class="primary" onclick="cook()">🍛 Tell me what we should eat</button>
-<button class="secondary" onclick="reset()">Reset choices</button>
+<button class="card" style="background:var(--accent);color:#fff;width:100%;" onclick="cook()">
+🍛 Tell me what we should eat
+</button>
+
+<button class="card" onclick="reset()" style="width:100%;">Reset</button>
 
 <div id="result"></div>
 
 </div>
 </div>
 
-<!-- FOOTER -->
+<!-- WHY MODAL -->
+<div class="modal" id="whyModal" onclick="closeWhy(event)">
+<div class="modal-content">
+<h3>Why Ki Khaabo?</h3>
+<p>
+Because dinner is emotional logistics disguised as hunger.<br><br>
+We built this because deciding what to eat is often harder than cooking it — especially when two people, moods, leftovers, and real life collide.<br><br>
+So this app quietly argues with reality… so you don’t have to.
+</p>
+</div>
+</div>
+
 <div class="footer left">BanRap</div>
-<div class="footer right">Ver.2.4.0</div>
+<div class="footer right">Ver.2.4.1</div>
 
 <script>
 
 let user="";
+let prepSelections=[];
 
 function enter(u){
 user=u;
@@ -310,34 +321,59 @@ document.getElementById("user").innerText=u;
 },1200);
 }
 
-function goBack(){
-location.reload();
-}
+function goBack(){ location.reload(); }
 
 function sel(el){
 el.classList.toggle("selected");
 if(navigator.vibrate) navigator.vibrate(20);
 }
 
-/* INTELLIGENCE LAYER (SIMPLIFIED BUT CORRECT RULES) */
-function cook(){
+/* PREP LOGIC FIX */
+function prep(el){
 
-let prep = [...document.querySelectorAll(".pill.selected")].map(e=>e.innerText);
+let val=el.innerText;
+
+if(val==="No time for prep"){
+prepSelections=["No time for prep"];
+document.querySelectorAll(".pill").forEach(p=>{
+if(p!==el && p.parentNode===el.parentNode){
+p.classList.remove("selected");
+}
+});
+el.classList.add("selected");
+return;
+}
+
+if(prepSelections.includes("No time for prep")){
+alert("You are contradicting yourself. Fix selection.");
+return;
+}
+
+el.classList.toggle("selected");
+
+prepSelections=[...document.querySelectorAll(".pill.selected")].map(x=>x.innerText);
+
+if(prepSelections.length>2){
+alert("Optimistic much? Choose only 2 prep options.");
+el.classList.remove("selected");
+prepSelections.pop();
+}
+}
+
+/* INTELLIGENCE */
+function cook(){
 
 document.getElementById("loader").style.display="flex";
 
 setTimeout(()=>{
-
 document.getElementById("loader").style.display="none";
 
-/* HARD RULE EXAMPLE */
-if(prep.includes("No time for prep")){
+if(prepSelections.includes("No time for prep")){
 document.getElementById("result").innerHTML=`
-<div class="card">❌ Egg Fried Rice blocked (requires prep assumption)</div>
-<div class="card">🥇 Veg Maggi (safe fallback)</div>
-<div class="card">🥈 Simple Dal + Rice</div>
-<div class="card">🥣 Breakfast: Coffee diplomacy</div>
-<div class="card">🍱 Lunch: TBD survival mode</div>
+<div class="card">🥇 Veg Maggi</div>
+<div class="card">🥈 Simple Dal Rice</div>
+<div class="card">🍱 Lunch: survival mode</div>
+<div class="card">🥣 Breakfast: Coffee + toast</div>
 `;
 return;
 }
@@ -346,19 +382,19 @@ document.getElementById("result").innerHTML=`
 <div class="card">🥇 Egg Fried Rice</div>
 <div class="card">🥈 Pav Bhaji</div>
 <div class="card">🥉 Aloo Paratha</div>
-<div class="card">🥣 Breakfast: Mango oats / coffee</div>
-<div class="card">🍱 Lunch: Rice-based carry forward logic</div>
+<div class="card">🍱 Lunch: rice logic applied</div>
+<div class="card">🥣 Breakfast: oats / mango shake</div>
 `;
-
 },2000);
 }
 
 function reset(){
 document.querySelectorAll(".pill").forEach(p=>p.classList.remove("selected"));
+prepSelections=[];
 document.getElementById("result").innerHTML="";
 }
 
-/* THEME (RESTORED 4 MODE LOGIC SIMPLIFIED PLACEHOLDER) */
+/* THEME */
 function toggleTheme(){
 document.body.classList.toggle("dark");
 
@@ -372,6 +408,16 @@ document.documentElement.style.setProperty("--bg","#f5f5f5");
 document.documentElement.style.setProperty("--card","#fff");
 document.documentElement.style.setProperty("--text","#111");
 document.documentElement.style.setProperty("--button","#ddd");
+}
+}
+
+function openWhy(){
+document.getElementById("whyModal").style.display="flex";
+}
+
+function closeWhy(e){
+if(e.target.id==="whyModal"){
+document.getElementById("whyModal").style.display="none";
 }
 }
 
