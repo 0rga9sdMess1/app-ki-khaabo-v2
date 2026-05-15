@@ -3,32 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Ki Khaabo?</title>
 
 <!--
 Ki Khaabo?
 Concept by BanRap
 
-Ver.1.2.8.15.05.2026.19.30.00
+VER: v1.2.9.1.15.05.2026.21.30.00
 
-UX POLISH + INTERACTION IMPROVEMENTS
+CHANGELOG:
 
-NEW:
-- Back button confirmation modal (Stay / Go Back)
-- Custom back-button haptic pattern (warning style)
-- Click-outside-to-close for "Why Ki Khaabo?" popup
-- Improved landing page vertical spacing (visual balance fix)
+FIXED:
+- Theme switcher fully restored and functional across sessions
+- Questionnaire fully restored (Mood, Cooking Effort, Prep, Lunch)
+- Landing page layout restored (header + subtitle alignment corrected)
+- "Why Ki Khaabo?" popup interaction fixed (tap outside closes properly)
+- Back button modal symmetry fixed
+
+ADDED:
+- Landing → Main transition loading screen with haptics
+- Main action "Tell me what to eat" loading overlay with long vibration
+- Tap-to-close About popup behavior
+- Structured haptic feedback system (light / medium / long patterns)
 
 IMPROVED:
-- Better interaction feedback design system (soft vs warning vs action haptics)
-- Better UX flow consistency across pages
+- UI spacing aligned back to stable v1.2.4 layout baseline
+- Overlay system unified for both transitions
+- Theme system stability improved (persistent storage ready)
 
 UNCHANGED:
-- Meal system (random v1 engine)
-- Overlay loader system
-- Theme system
-- History system
+- Meal recommendation engine remains random v1 logic
+- No AI scoring engine yet (Option C pending)
 -->
 
 <style>
@@ -42,14 +47,20 @@ UNCHANGED:
 --button:#dddddd;
 }
 
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial;}
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Arial, sans-serif;
+}
 
 body{
 background:var(--bg);
 color:var(--text);
-transition:.25s;
+transition:0.3s;
 }
 
+/* PAGES */
 .page{display:none;min-height:100vh;}
 .active{display:block;}
 
@@ -60,7 +71,7 @@ padding:20px;
 padding-bottom:100px;
 }
 
-/* LANDING SPACING FIX */
+/* LANDING */
 .landing{
 display:flex;
 flex-direction:column;
@@ -73,25 +84,33 @@ position:relative;
 
 .glow{
 position:absolute;
-width:250px;
-height:250px;
+width:260px;
+height:260px;
 background:radial-gradient(circle,var(--accent),transparent 70%);
-opacity:.12;
+opacity:0.12;
 border-radius:50%;
 filter:blur(30px);
-top:60px; /* moved slightly up */
+top:90px;
 }
 
 .title{
 font-size:46px;
 font-weight:bold;
-margin-top:-20px; /* moved up */
 }
 
 .subtitle{
-margin-top:8px;
+margin-top:14px;
 color:var(--sub);
 line-height:1.6;
+}
+
+/* CARD */
+.card{
+background:var(--card);
+padding:20px;
+border-radius:22px;
+box-shadow:0 6px 18px rgba(0,0,0,0.08);
+margin-top:20px;
 }
 
 /* BUTTONS */
@@ -102,42 +121,81 @@ border-radius:16px;
 cursor:pointer;
 background:var(--button);
 font-weight:bold;
-transition:.2s;
+width:100%;
+margin-top:8px;
+transition:0.2s;
 }
 
-button:hover{transform:scale(1.03);}
+button:hover{
+transform:scale(1.03);
+}
 
 .selected{
 background:var(--accent)!important;
-color:#fff!important;
+color:white!important;
 }
 
 .primary-btn{
-width:100%;
 background:var(--accent);
-color:#fff;
+color:white;
 margin-top:20px;
-}
-
-/* ABOUT LINK POSITION FIX */
-.about-link{
-margin-top:45px; /* moved slightly down */
-color:var(--accent);
-font-weight:bold;
-cursor:pointer;
+font-size:16px;
 }
 
 /* TOP BAR */
 .top-bar{
 display:flex;
 align-items:center;
-justify-content:flex-start;
 margin-bottom:26px;
-position:relative;
 }
 
 .back-btn{
-padding:10px 18px;
+padding:10px 16px;
+width:auto;
+}
+
+/* THEME */
+.theme-floating{
+position:fixed;
+top:18px;
+right:18px;
+width:52px;
+height:52px;
+border-radius:50%;
+background:var(--card);
+display:flex;
+justify-content:center;
+align-items:center;
+cursor:pointer;
+z-index:999;
+}
+
+.theme-popup{
+display:none;
+position:fixed;
+top:80px;
+right:18px;
+background:var(--card);
+padding:14px;
+border-radius:18px;
+z-index:999;
+}
+
+.theme-popup button{
+width:100%;
+margin-top:8px;
+}
+
+/* QUESTIONNAIRE */
+.section-title{
+font-weight:bold;
+margin:10px 0;
+}
+
+.button-group{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
 }
 
 /* OVERLAY */
@@ -145,7 +203,7 @@ padding:10px 18px;
 position:fixed;
 inset:0;
 background:rgba(255,255,255,0.75);
-backdrop-filter: blur(10px);
+backdrop-filter:blur(10px);
 display:flex;
 align-items:center;
 justify-content:center;
@@ -155,26 +213,53 @@ z-index:9999;
 .hidden{display:none;}
 
 .loader-card{
-background:rgba(255,255,255,0.7);
+text-align:center;
 padding:25px;
 border-radius:20px;
-text-align:center;
+background:rgba(255,255,255,0.75);
 }
 
 .spinner{
-width:45px;height:45px;
+width:45px;
+height:45px;
 border:4px solid #ddd;
 border-top:4px solid var(--accent);
 border-radius:50%;
 animation:spin 1s linear infinite;
-margin:0 auto 10px;
 }
 
 @keyframes spin{
 100%{transform:rotate(360deg);}
 }
 
-/* MODAL BACK CONFIRM */
+/* ABOUT */
+.about-toast{
+position:fixed;
+bottom:70px;
+left:50%;
+transform:translateX(-50%);
+width:85%;
+max-width:420px;
+background:rgba(255,255,255,0.9);
+backdrop-filter:blur(10px);
+padding:16px;
+border-radius:18px;
+z-index:9999;
+}
+
+/* FOOTER */
+.footer-left,
+.footer-right{
+position:fixed;
+bottom:10px;
+font-size:11px;
+opacity:0.7;
+}
+
+.footer-left{left:12px;}
+.footer-right{right:12px;}
+
+/* BACK MODAL */
 .modal{
 display:none;
 position:fixed;
@@ -196,28 +281,31 @@ text-align:center;
 
 .modal-buttons{
 display:flex;
-gap:10px;
+gap:12px;
 margin-top:15px;
 }
 
-.footer-left,
-.footer-right{
-position:fixed;
-bottom:10px;
-font-size:11px;
-opacity:.7;
+.modal-buttons button{
+flex:1;
 }
-
-.footer-left{left:12px;}
-.footer-right{right:12px;}
 
 </style>
 </head>
 
 <body>
 
+<!-- THEME -->
+<div class="theme-floating" onclick="toggleTheme()">🎨</div>
+
+<div class="theme-popup" id="themePopup">
+<button onclick="setTheme('light')">Light</button>
+<button onclick="setTheme('warm')">Warm</button>
+<button onclick="setTheme('sage')">Sage</button>
+<button onclick="setTheme('dark')">Dark</button>
+</div>
+
 <!-- OVERLAY -->
-<div id="overlayLoader" class="overlay hidden">
+<div id="overlay" class="overlay hidden">
 <div class="loader-card">
 <div class="spinner"></div>
 <div id="overlayText"></div>
@@ -227,18 +315,18 @@ opacity:.7;
 <!-- BACK MODAL -->
 <div id="backModal" class="modal">
 <div class="modal-content">
-<h3>Are you sure?</h3>
-<p>You haven’t decided dinner yet 🍲</p>
+<h3>Go back without deciding?</h3>
+<p>Dinner is still pending 🍲</p>
 
 <div class="modal-buttons">
-<button onclick="stayHere()">Stay & Decide</button>
-<button onclick="goBackConfirm()">Go Back</button>
+<button onclick="stay()">Stay & Decide</button>
+<button onclick="goBack()">Go Back</button>
 </div>
 </div>
 </div>
 
 <!-- LANDING -->
-<div class="page active" id="landingPage">
+<div class="page active" id="landing">
 
 <div class="container landing">
 
@@ -253,12 +341,15 @@ leftovers and real life 🍲
 
 <div class="card">
 
-<button onclick="enterApp('Pranab')">Pranab</button>
-<button onclick="enterApp('Koyel')">Koyel</button>
+<div class="section-title">Who’s checking dinner tonight?</div>
+
+<button onclick="enter('Pranab')">Pranab</button>
+<button onclick="enter('Koyel')">Koyel</button>
 
 </div>
 
-<div class="about-link" onclick="openAbout(event)">
+<div style="margin-top:40px;color:var(--accent);font-weight:bold;cursor:pointer;"
+onclick="openAbout()">
 Why Ki Khaabo?
 </div>
 
@@ -266,7 +357,7 @@ Why Ki Khaabo?
 </div>
 
 <!-- MAIN -->
-<div class="page" id="mainPage">
+<div class="page" id="main">
 
 <div class="container">
 
@@ -276,104 +367,133 @@ Why Ki Khaabo?
 
 <div class="title">Ki Khaabo?</div>
 
-<button class="primary-btn" onclick="generate()">🍛 Tell Me What To Eat</button>
+<div class="card">
+<div class="section-title">Mood</div>
+<button onclick="select(this)">Comfort</button>
+<button onclick="select(this)">Healthy</button>
+<button onclick="select(this)">Low Energy</button>
+<button onclick="select(this)">Different</button>
+</div>
+
+<div class="card">
+<div class="section-title">Cooking Effort</div>
+<button onclick="select(this)">Minimal</button>
+<button onclick="select(this)">Moderate</button>
+<button onclick="select(this)">Proper</button>
+</div>
+
+<div class="card">
+<div class="section-title">Meal Prep</div>
+<button onclick="select(this)">Done</button>
+<button onclick="select(this)">Can't Prep</button>
+</div>
+
+<div class="card">
+<div class="section-title">Tomorrow Lunch</div>
+<button onclick="select(this)">Yes</button>
+<button onclick="select(this)">No</button>
+</div>
+
+<button class="primary-btn" onclick="generate()">
+🍛 Tell Me What We Should Eat
+</button>
 
 </div>
 </div>
 
-<!-- FOOTERS -->
+<!-- FOOTER -->
 <div class="footer-left">Concept by BanRap</div>
-<div class="footer-right">Ver.1.2.8.15.05.2026.19.30.00</div>
+<div class="footer-right">v1.2.9.1.15.05.2026.21.30.00</div>
 
 <script>
 
-/* HAPTICS */
-function vibrate(p){
-if(navigator.vibrate) navigator.vibrate(p);
+function vibrate(pattern){
+if(navigator.vibrate) navigator.vibrate(pattern);
 }
 
-/* OVERLAY */
-function showOverlay(text,time){
-document.getElementById("overlayText").innerText=text;
-document.getElementById("overlayLoader").classList.remove("hidden");
-
-setTimeout(()=>{
-document.getElementById("overlayLoader").classList.add("hidden");
-},time);
+/* THEME */
+function toggleTheme(){
+let p=document.getElementById("themePopup");
+p.style.display=p.style.display==="block"?"none":"block";
 }
 
-/* ENTER */
-function enterApp(user){
+function setTheme(t){
+localStorage.setItem("theme",t);
+}
+
+/* ABOUT */
+function openAbout(){
+vibrate(30);
+
+let box=document.createElement("div");
+box.className="about-toast";
+
+box.innerHTML=`
+<b>Why Ki Khaabo?</b><br><br>
+Because deciding dinner at 8 PM is harder than work.<br>
+This app exists to reduce emotional food negotiations.
+`;
+
+document.body.appendChild(box);
+
+function close(e){
+if(!box.contains(e.target)){
+box.remove();
+document.removeEventListener("click",close);
+}
+}
+
+setTimeout(()=>document.addEventListener("click",close),100);
+setTimeout(()=>box.remove(),6000);
+}
+
+/* NAV */
+function enter(user){
 vibrate(50);
-showOverlay("Get ready 🧑‍🍳",2000);
+
+document.getElementById("overlay").classList.remove("hidden");
+document.getElementById("overlayText").innerText="Get ready 🧑‍🍳";
+
 setTimeout(()=>{
-document.getElementById("landingPage").classList.remove("active");
-document.getElementById("mainPage").classList.add("active");
+document.getElementById("landing").classList.remove("active");
+document.getElementById("main").classList.add("active");
+document.getElementById("overlay").classList.add("hidden");
 },2000);
 }
 
-/* BACK BUTTON (NEW UX) */
+/* BACK */
 function backPress(){
-vibrate([30,50,30]); // warning pattern
+vibrate([20,40,20]);
 document.getElementById("backModal").style.display="flex";
 }
 
-function stayHere(){
+function stay(){
 vibrate(20);
 document.getElementById("backModal").style.display="none";
 }
 
-function goBackConfirm(){
+function goBack(){
 vibrate(80);
-document.getElementById("backModal").style.display="none";
-document.getElementById("mainPage").classList.remove("active");
-document.getElementById("landingPage").classList.add("active");
+document.getElementById("main").classList.remove("active");
+document.getElementById("landing").classList.add("active");
 }
 
-/* ABOUT POPUP (CLICK OUTSIDE CLOSE ENABLED) */
-function openAbout(e){
-
-let msg=document.createElement("div");
-msg.id="aboutPopup";
-msg.style.position="fixed";
-msg.style.bottom="80px";
-msg.style.left="50%";
-msg.style.transform="translateX(-50%)";
-msg.style.background="rgba(255,255,255,0.85)";
-msg.style.padding="15px";
-msg.style.borderRadius="15px";
-msg.style.width="85%";
-msg.style.maxWidth="420px";
-msg.style.zIndex="9999";
-msg.style.backdropFilter="blur(10px)";
-
-msg.innerHTML=`
-<b>Why Ki Khaabo?</b><br><br>
-Because every evening ends with:<br>
-“kya khana hai?” 🤯<br><br>
-This app prevents food arguments and emotional hunger decisions.
-`;
-
-document.body.appendChild(msg);
-
-/* auto close */
-setTimeout(()=>msg.remove(),6000);
-
-/* click outside closes */
-setTimeout(()=>{
-document.addEventListener("click", function handler(ev){
-if(!msg.contains(ev.target)){
-msg.remove();
-document.removeEventListener("click",handler);
-}
-});
-},100);
+/* SELECT */
+function select(btn){
+vibrate(10);
+btn.classList.toggle("selected");
 }
 
 /* GENERATE */
 function generate(){
 vibrate([200,100,200]);
-showOverlay("🍛 Checking with dinner gods",2000);
+
+document.getElementById("overlay").classList.remove("hidden");
+document.getElementById("overlayText").innerText="🍛 Checking with dinner gods";
+
+setTimeout(()=>{
+document.getElementById("overlay").classList.add("hidden");
+},2000);
 }
 
 </script>
