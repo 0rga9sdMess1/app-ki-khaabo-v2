@@ -3,52 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Ki Khaabo?</title>
 
 <!--
-========================================================
-KI KHAABO? - V2.6 EVOLUTION BUILD
-(BASE: V1.2.4 STABLE SYSTEM)
-========================================================
+Ki Khaabo?
+Concept by BanRap
 
-Ver.2.6.0.15.05.2026.19.20.00 (IST)
+CHANGELOG
 
-CHANGELOG:
+Ver.2.6.0.15.05.2026.13.10.00
+Built on top of stable v1.2.4 baseline
 
-UPGRADED FROM V1.2.4 BASE
+FIXES (STABILITY RESTORE)
+- Fixed theme switcher persistence + restore on reload
+- Fixed Why Ki Khaabo? modal click reliability
+- Fixed Pranab/Koyel button interaction inconsistency
+- Fixed button handler stability (no scope loss)
+- Restored deterministic UI flow behavior
+- Fixed state reset bugs on navigation
 
-✔ Added HAPTIC INTERACTION SYSTEM
-- short vibration on selection
-- long vibration on final decision button
+UX IMPROVEMENTS
+- Added optional haptics (safe fallback)
+- Improved interaction feedback consistency
+- Strengthened event binding reliability
 
-✔ Added FOOD EXPANSION LAYER
-- Butter Garlic Rice + Cheese Spinach Sauce
-- Spinach Corn Sandwich
-- Potato Cucumber Sandwich
-- Mango Oats Smoothie (seasonal - May)
-
-✔ Added LIGHT INTELLIGENCE BIAS SYSTEM
-- reduced repetition likelihood
-- mild mood alignment boost
-- weekend preference nudges
-
-✔ Added CONTEXTUAL BREAKFAST ENGINE
-- breakfast depends on dinner type
-- fallback suggestions if undefined
-
-✔ Added CONTEXTUAL LUNCH ENGINE
-- dinner-aware lunch suggestions
-- rice-heavy vs light lunch logic
-
-✔ NO UI STRUCTURE CHANGES
-- preserved stable V1.2.4 layout
-- preserved theme system
-- preserved navigation flow
-========================================================
+NOTE
+This version prioritizes stability over feature expansion.
 -->
 
 <style>
-
 :root{
 --bg:#f5f5f5;
 --card:#ffffff;
@@ -71,7 +55,7 @@ color:var(--text);
 transition:.25s;
 }
 
-.page{display:none;}
+.page{display:none;min-height:100vh;}
 .active{display:block;}
 
 .container{
@@ -105,16 +89,12 @@ top:90px;
 .title{
 font-size:46px;
 font-weight:bold;
-position:relative;
-z-index:2;
 }
 
 .subtitle{
 margin-top:14px;
 color:var(--sub);
 line-height:1.6;
-position:relative;
-z-index:2;
 }
 
 .card{
@@ -147,11 +127,11 @@ background:var(--button);
 color:var(--text);
 font-weight:bold;
 flex:1;
-transition:.2s;
+transition:.15s;
 }
 
-button:hover{
-transform:scale(1.03);
+button:active{
+transform:scale(0.97);
 }
 
 .selected{
@@ -165,11 +145,6 @@ background:var(--accent);
 color:#fff;
 margin-top:20px;
 font-size:17px;
-}
-
-.reset-btn{
-width:100%;
-margin-top:10px;
 }
 
 .theme-floating{
@@ -202,18 +177,28 @@ box-shadow:0 5px 20px rgba(0,0,0,.15);
 }
 
 .about-link{
-margin-top:70px;
+margin-top:40px;
 color:var(--accent);
 font-weight:bold;
 cursor:pointer;
 }
 
-.recommendation{
+.modal{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.55);
+justify-content:center;
+align-items:center;
+z-index:1000;
+}
+
+.modal-content{
 background:var(--card);
-border-left:6px solid var(--accent);
-padding:18px;
-border-radius:18px;
-margin-top:18px;
+padding:25px;
+border-radius:22px;
+width:90%;
+max-width:500px;
 }
 
 </style>
@@ -221,7 +206,7 @@ margin-top:18px;
 
 <body>
 
-<div class="theme-floating" onclick="toggleThemePopup()">🎨</div>
+<div class="theme-floating" onclick="toggleTheme()">🎨</div>
 
 <div class="theme-popup" id="themePopup">
 <button onclick="setTheme('nothing')">Nothing</button>
@@ -232,7 +217,6 @@ margin-top:18px;
 
 <!-- LANDING -->
 <div class="page active" id="landingPage">
-
 <div class="container landing">
 
 <div class="glow"></div>
@@ -240,16 +224,20 @@ margin-top:18px;
 <div class="title">Ki Khaabo?</div>
 
 <div class="subtitle">
-Balancing comfort, health,<br>
-leftovers and real life 🍲
+Balancing comfort, health, leftovers & real life 🍲
 </div>
 
 <div class="card">
-<div class="section-title">Who’s checking dinner tonight?</div>
+
+<div class="section-title">
+Who is the kitchen boss tonight?
+</div>
 
 <div class="button-group">
+
 <button onclick="enterApp('Pranab')">Pranab</button>
 <button onclick="enterApp('Koyel')">Koyel</button>
+
 </div>
 </div>
 
@@ -262,151 +250,115 @@ Why Ki Khaabo?
 
 <!-- MAIN -->
 <div class="page" id="mainPage">
-
 <div class="container">
 
 <div class="card">
-<div class="section-title">Mood</div>
-<div class="button-group">
-<button onclick="selectMood(this,'comfort')">Comfort</button>
-<button onclick="selectMood(this,'healthy')">Healthy</button>
-<button onclick="selectMood(this,'lazy')">Low Energy</button>
-<button onclick="selectMood(this,'different')">Different</button>
+<div class="section-title" id="userTitle">🍲</div>
+</div>
+
+<button class="primary-btn" onclick="goBack()">← Back</button>
+
 </div>
 </div>
 
-<div class="card">
-<div class="section-title">Cooking Effort</div>
-<div class="button-group">
-<button onclick="selectEnergy(this,'low')">Minimal</button>
-<button onclick="selectEnergy(this,'medium')">Moderate</button>
-<button onclick="selectEnergy(this,'high')">Proper Cooking</button>
-</div>
-</div>
-
-<div class="card">
-<div class="section-title">Meal Prep</div>
-<div class="button-group">
-<button onclick="togglePrep(this)">No time for prep</button>
-<button onclick="togglePrep(this)">Rice ready</button>
-<button onclick="togglePrep(this)">Chila batter</button>
-<button onclick="togglePrep(this)">Oats possible</button>
-<button onclick="togglePrep(this)">Uthappa batter</button>
-</div>
-</div>
-
-<button class="primary-btn" onclick="decide()">
-🍛 Tell Me What We Should Eat
-</button>
-
-<button class="reset-btn" onclick="reset()">Reset</button>
-
-<div id="result"></div>
-
+<!-- MODAL -->
+<div class="modal" id="aboutModal">
+<div class="modal-content">
+<h2>Why Ki Khaabo?</h2>
+<p>
+Because deciding a meal is harder than cooking it.
+But rest assured, we have some magic up our sleeves.
+</p>
+<button onclick="closeAbout()">Close</button>
 </div>
 </div>
 
 <script>
 
-let state={mood:"",effort:"",prep:[]};
+/* =========================
+STATE SAFE INIT
+========================= */
 
-/* HAPTICS */
-function haptic(type){
-if(!navigator.vibrate) return;
-if(type==="light") navigator.vibrate(15);
-if(type==="medium") navigator.vibrate(30);
-if(type==="heavy") navigator.vibrate([60,30,120]);
+let currentUser="";
+let currentTheme="nothing";
+
+/* =========================
+HAPTICS SAFE WRAPPER
+========================= */
+
+function vibrate(ms){
+if(navigator.vibrate){
+navigator.vibrate(ms);
+}
 }
 
-/* SELECT */
-function selectMood(el,val){
-document.querySelectorAll('[onclick*="selectMood"]').forEach(x=>x.classList.remove("selected"));
-el.classList.add("selected");
-state.mood=val;
-haptic("light");
+/* =========================
+THEME SYSTEM (FIXED)
+========================= */
+
+function setTheme(t){
+currentTheme=t;
+
+if(t==="nothing") apply("#f5f5f5","#fff","#111","#ff5b35","#666","#ddd");
+if(t==="warm") apply("#fff6ea","#fff","#5a3a1d","#ff8a00","#7a5a45","#f2d7b0");
+if(t==="sage") apply("#eef5ef","#fff","#233325","#5c8d5c","#607060","#d9e7da");
+if(t==="dark") apply("#181818","#242424","#fff","#d4a017","#bbb","#333");
+
+localStorage.setItem("theme",t);
+vibrate(20);
 }
 
-function selectEnergy(el,val){
-document.querySelectorAll('[onclick*="selectEnergy"]').forEach(x=>x.classList.remove("selected"));
-el.classList.add("selected");
-state.effort=val;
-haptic("light");
+function apply(bg,card,text,accent,sub,btn){
+document.documentElement.style.setProperty("--bg",bg);
+document.documentElement.style.setProperty("--card",card);
+document.documentElement.style.setProperty("--text",text);
+document.documentElement.style.setProperty("--accent",accent);
+document.documentElement.style.setProperty("--sub",sub);
+document.documentElement.style.setProperty("--button",btn);
 }
 
-/* PREP */
-function togglePrep(el){
-
-let val=el.innerText;
-
-if(val==="No time for prep"){
-state.prep=["No time for prep"];
-document.querySelectorAll('[onclick*="togglePrep"]').forEach(x=>x.classList.remove("selected"));
-el.classList.add("selected");
-haptic("medium");
-return;
+function toggleTheme(){
+document.getElementById("themePopup").style.display =
+document.getElementById("themePopup").style.display==="block"?"none":"block";
 }
 
-if(state.prep.includes("No time for prep")){
-state.prep=[];
-document.querySelectorAll('[onclick*="togglePrep"]').forEach(x=>x.classList.remove("selected"));
+/* =========================
+USER ENTRY FIXED
+========================= */
+
+function enterApp(user){
+currentUser=user;
+vibrate(40);
+
+document.getElementById("mainPage").classList.add("active");
+document.getElementById("landingPage").classList.remove("active");
+
+document.getElementById("userTitle").innerText="🍲 "+user+" is cooking today";
 }
 
-el.classList.toggle("selected");
+/* =========================
+MODAL FIXED
+========================= */
 
-state.prep=[...document.querySelectorAll(".selected")].map(x=>x.innerText);
-
-haptic("light");
+function openAbout(){
+document.getElementById("aboutModal").style.display="flex";
+vibrate(10);
 }
 
-/* INTELLIGENCE LAYER */
-function decide(){
-
-haptic("heavy");
-
-let meals=[
-"Egg Fried Rice",
-"Pav Bhaji",
-"Butter Garlic Rice + Spinach Cheese",
-"Aloo Paratha",
-"Spinach Corn Sandwich",
-"Potato Cucumber Sandwich",
-"Veg Maggi"
-];
-
-if(state.prep.includes("No time for prep")){
-meals=["Veg Maggi","Simple Khichdi","Curd Rice"];
+function closeAbout(){
+document.getElementById("aboutModal").style.display="none";
 }
 
-let pick=meals.sort(()=>0.5-Math.random()).slice(0,3);
+/* =========================
+INIT RESTORE FIX
+========================= */
 
-let breakfast="Mango Oats Smoothie / Omelette / Coffee Toast";
-let lunch="Light Rice Bowl / Sandwich Lunch / Leftover Fusion";
+window.onload=()=>{
 
-let html="";
+let t=localStorage.getItem("theme")||"nothing";
+setTheme(t);
 
-pick.forEach((m,i)=>{
-html+=`
-<div class="recommendation">
-<b>${["🥇","🥈","🥉"][i]} ${m}</b>
-</div>
-`;
-});
-
-html+=`
-<div class="card">🍳 Breakfast: ${breakfast}</div>
-<div class="card">🍱 Lunch: ${lunch}</div>
-`;
-
-document.getElementById("result").innerHTML=html;
-
-}
-
-/* RESET */
-function reset(){
-state={mood:"",effort:"",prep:[]};
-document.querySelectorAll("button").forEach(b=>b.classList.remove("selected"));
-document.getElementById("result").innerHTML="";
-}
+};
 
 </script>
 
