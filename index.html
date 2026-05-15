@@ -10,9 +10,9 @@
 Ki Khaabo?
 Concept by BanRap
 
-Ver.1.2.6.15.05.2026.18.04.00
+Ver.1.2.7.15.05.2026.18.40.00
 
-UI RESTORE + MICRO UX POLISH
+BUG FIX + UX RESTORE BUILD
 -->
 
 <style>
@@ -170,44 +170,6 @@ border-radius:14px;
 margin-top:10px;
 }
 
-/* OVERLAY */
-.overlay{
-position:fixed;
-inset:0;
-background:rgba(255,255,255,0.75);
-backdrop-filter: blur(10px);
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:9999;
-flex-direction:column;
-}
-
-.hidden{display:none;}
-
-.loader-card{
-text-align:center;
-padding:30px;
-border-radius:20px;
-background:rgba(255,255,255,0.6);
-box-shadow:0 10px 30px rgba(0,0,0,0.1);
-}
-
-.spinner{
-width:45px;
-height:45px;
-border:4px solid #ddd;
-border-top:4px solid var(--accent);
-border-radius:50%;
-margin:0 auto 15px auto;
-animation:spin 1s linear infinite;
-}
-
-@keyframes spin{
-0%{transform:rotate(0deg);}
-100%{transform:rotate(360deg);}
-}
-
 /* FOOTERS */
 .footer-left,
 .footer-right{
@@ -255,12 +217,69 @@ width:100%;
 margin-top:8px;
 }
 
-.about-link{
-margin-top:30px;
-color:var(--accent);
-font-weight:bold;
-cursor:pointer;
+/* OVERLAY */
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(255,255,255,0.75);
+backdrop-filter: blur(10px);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
+flex-direction:column;
 }
+
+.hidden{display:none;}
+
+.loader-card{
+text-align:center;
+padding:30px;
+border-radius:20px;
+background:rgba(255,255,255,0.6);
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+.spinner{
+width:45px;
+height:45px;
+border:4px solid #ddd;
+border-top:4px solid var(--accent);
+border-radius:50%;
+margin:0 auto 15px auto;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+/* ABOUT TOAST */
+.about-toast{
+position:fixed;
+bottom:70px;
+left:50%;
+transform:translateX(-50%);
+width:85%;
+max-width:420px;
+
+background:rgba(255,255,255,0.8);
+backdrop-filter: blur(12px);
+
+padding:16px;
+border-radius:18px;
+box-shadow:0 10px 30px rgba(0,0,0,0.15);
+
+font-size:14px;
+line-height:1.5;
+color:var(--text);
+
+z-index:9999;
+}
+
+.footer-left{left:12px;}
+.footer-right{right:12px;}
 
 </style>
 </head>
@@ -284,6 +303,9 @@ cursor:pointer;
 <button onclick="setTheme('sage')">Sage</button>
 <button onclick="setTheme('dark')">Dark</button>
 </div>
+
+<!-- ABOUT TOAST -->
+<div id="aboutToast" class="about-toast hidden"></div>
 
 <!-- LANDING -->
 <div class="page active" id="landingPage">
@@ -310,7 +332,7 @@ leftovers and real life 🍲
 
 </div>
 
-<div class="about-link" onclick="openAbout()">
+<div style="margin-top:25px;color:var(--accent);font-weight:bold;cursor:pointer;" onclick="openAbout()">
 Why Ki Khaabo?
 </div>
 
@@ -329,8 +351,8 @@ Why Ki Khaabo?
 
 <div class="title" style="font-size:36px;">Ki Khaabo?</div>
 
-<!-- INPUTS -->
 <div class="card">
+
 <div class="section-title">Mood</div>
 <div class="button-group" id="moodButtons">
 
@@ -343,6 +365,7 @@ Why Ki Khaabo?
 </div>
 
 <div class="card">
+
 <div class="section-title">Cooking effort</div>
 <div class="button-group" id="energyButtons">
 
@@ -354,16 +377,18 @@ Why Ki Khaabo?
 </div>
 
 <div class="card">
-<div class="section-title">Meal prep status</div>
+
+<div class="section-title">Meal prep</div>
 <div class="button-group" id="prepButtons">
 
-<button onclick="selectPrep(this,'done')">Meal prep done</button>
-<button onclick="selectPrep(this,'cant')">Didn't / can't prep</button>
+<button onclick="selectPrep(this,'done')">Prep done</button>
+<button onclick="selectPrep(this,'cant')">Can't prep</button>
 
 </div>
 </div>
 
 <div class="card">
+
 <div class="section-title">Tomorrow lunch?</div>
 <div class="button-group" id="lunchButtons">
 
@@ -384,18 +409,17 @@ Why Ki Khaabo?
 
 <!-- FOOTERS -->
 <div class="footer-left">Concept by BanRap</div>
-<div class="footer-right">Ver.1.2.6.15.05.2026.18.04.00</div>
+<div class="footer-right">Ver.1.2.7.15.05.2026.18.40.00</div>
 
 <script>
 
+/* STATE */
 let selectedUser="",selectedMood="",selectedEnergy="",prepStatus="",lunchNeeded=false;
 
-/* ===== HAPTICS ===== */
-function vibrate(p){
-try{if(navigator.vibrate) navigator.vibrate(p);}catch(e){}
-}
+/* HAPTICS */
+function vibrate(p){try{if(navigator.vibrate)navigator.vibrate(p);}catch(e){}}
 
-/* ===== OVERLAY ===== */
+/* OVERLAY */
 function showOverlay(text,time){
 document.getElementById("overlayText").innerText=text;
 document.getElementById("overlayLoader").classList.remove("hidden");
@@ -405,13 +429,68 @@ document.getElementById("overlayLoader").classList.add("hidden");
 },time);
 }
 
-/* ===== THEME ===== */
-function toggleThemePopup(){
-let p=document.getElementById("themePopup");
-p.style.display = p.style.display==="block"?"none":"block";
+/* THEME FIX (RESTORED) */
+function setTheme(theme){
+
+if(theme==="nothing"){
+applyTheme("#f5f5f5","#ffffff","#111111","#ff5b35","#666666","#dddddd");
 }
 
-/* ===== ENTER ===== */
+if(theme==="warm"){
+applyTheme("#fff6ea","#ffffff","#5a3a1d","#ff8a00","#7a5a45","#f2d7b0");
+}
+
+if(theme==="sage"){
+applyTheme("#eef5ef","#ffffff","#233325","#5c8d5c","#607060","#d9e7da");
+}
+
+if(theme==="dark"){
+applyTheme("#181818","#242424","#ffffff","#d4a017","#bbbbbb","#333333");
+}
+
+localStorage.setItem("theme",theme);
+}
+
+function applyTheme(bg,card,text,accent,sub,button){
+document.documentElement.style.setProperty("--bg",bg);
+document.documentElement.style.setProperty("--card",card);
+document.documentElement.style.setProperty("--text",text);
+document.documentElement.style.setProperty("--accent",accent);
+document.documentElement.style.setProperty("--sub",sub);
+document.documentElement.style.setProperty("--button",button);
+}
+
+function toggleThemePopup(){
+let p=document.getElementById("themePopup");
+p.style.display=p.style.display==="block"?"none":"block";
+}
+
+/* ABOUT */
+function openAbout(){
+
+const msg = `
+🍲 Why Ki Khaabo?
+
+Because at 7:30 PM, two humans with full refrigerators still ask:
+“kya khana hai?”
+
+This app was built to prevent:
+- hunger arguments
+- paneer vs egg negotiations
+- existential dinner crises
+
+It does not cook food.
+It negotiates peace.
+`;
+
+let toast=document.getElementById("aboutToast");
+toast.innerText=msg;
+toast.classList.remove("hidden");
+
+setTimeout(()=>toast.classList.add("hidden"),6000);
+}
+
+/* ENTER */
 function enterApp(user){
 
 selectedUser=user;
@@ -421,23 +500,19 @@ vibrate(50);
 showOverlay("Get ready to put your Chef's hat on 🧑🏼‍🍳",2000);
 
 setTimeout(()=>{
-swap("landingPage","mainPage");
+document.getElementById("landingPage").classList.remove("active");
+document.getElementById("mainPage").classList.add("active");
 },2000);
-
 }
 
-/* ===== NAV ===== */
-function swap(a,b){
-document.getElementById(a).classList.remove("active");
-document.getElementById(b).classList.add("active");
-}
-
+/* NAV */
 function goBack(){
 resetAll();
-swap("mainPage","landingPage");
+document.getElementById("mainPage").classList.remove("active");
+document.getElementById("landingPage").classList.add("active");
 }
 
-/* ===== SELECTIONS (NOW WITH HAPTICS) ===== */
+/* SELECTIONS */
 function selectMood(b,v){clear("#moodButtons");b.classList.add("selected");selectedMood=v;vibrate(30);}
 function selectEnergy(b,v){clear("#energyButtons");b.classList.add("selected");selectedEnergy=v;vibrate(30);}
 function selectPrep(b,v){clear("#prepButtons");b.classList.add("selected");prepStatus=v;vibrate(30);}
@@ -453,7 +528,7 @@ document.querySelectorAll(".selected").forEach(x=>x.classList.remove("selected")
 document.getElementById("results").innerHTML="";
 }
 
-/* ===== GENERATE ===== */
+/* GENERATE */
 function generateRecommendations(){
 
 vibrate([200,100,200]);
@@ -482,6 +557,11 @@ document.getElementById("results").innerHTML=html;
 
 },2000);
 }
+
+window.onload=()=>{
+let t=localStorage.getItem("theme");
+if(t) setTheme(t);
+};
 
 </script>
 
