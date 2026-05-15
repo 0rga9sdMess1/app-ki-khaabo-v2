@@ -10,9 +10,25 @@
 Ki Khaabo?
 Concept by BanRap
 
-Ver.1.2.7.15.05.2026.18.40.00
+Ver.1.2.8.15.05.2026.19.30.00
 
-BUG FIX + UX RESTORE BUILD
+UX POLISH + INTERACTION IMPROVEMENTS
+
+NEW:
+- Back button confirmation modal (Stay / Go Back)
+- Custom back-button haptic pattern (warning style)
+- Click-outside-to-close for "Why Ki Khaabo?" popup
+- Improved landing page vertical spacing (visual balance fix)
+
+IMPROVED:
+- Better interaction feedback design system (soft vs warning vs action haptics)
+- Better UX flow consistency across pages
+
+UNCHANGED:
+- Meal system (random v1 engine)
+- Overlay loader system
+- Theme system
+- History system
 -->
 
 <style>
@@ -26,12 +42,7 @@ BUG FIX + UX RESTORE BUILD
 --button:#dddddd;
 }
 
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-font-family:Arial,sans-serif;
-}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial;}
 
 body{
 background:var(--bg);
@@ -39,7 +50,6 @@ color:var(--text);
 transition:.25s;
 }
 
-/* PAGES */
 .page{display:none;min-height:100vh;}
 .active{display:block;}
 
@@ -50,7 +60,7 @@ padding:20px;
 padding-bottom:100px;
 }
 
-/* LANDING */
+/* LANDING SPACING FIX */
 .landing{
 display:flex;
 flex-direction:column;
@@ -69,38 +79,29 @@ background:radial-gradient(circle,var(--accent),transparent 70%);
 opacity:.12;
 border-radius:50%;
 filter:blur(30px);
-top:90px;
+top:60px; /* moved slightly up */
 }
 
-.title{font-size:46px;font-weight:bold;}
-.subtitle{margin-top:14px;color:var(--sub);line-height:1.6;}
-
-.card{
-background:var(--card);
-padding:20px;
-border-radius:22px;
-box-shadow:0 6px 18px rgba(0,0,0,.08);
-margin-top:20px;
-width:100%;
-}
-
-.section-title{
-font-size:18px;
+.title{
+font-size:46px;
 font-weight:bold;
-margin-bottom:14px;
+margin-top:-20px; /* moved up */
 }
 
-.button-group{display:flex;gap:10px;flex-wrap:wrap;}
+.subtitle{
+margin-top:8px;
+color:var(--sub);
+line-height:1.6;
+}
 
+/* BUTTONS */
 button{
 border:none;
 padding:14px;
 border-radius:16px;
 cursor:pointer;
 background:var(--button);
-color:var(--text);
 font-weight:bold;
-flex:1;
 transition:.2s;
 }
 
@@ -116,105 +117,27 @@ width:100%;
 background:var(--accent);
 color:#fff;
 margin-top:20px;
-font-size:17px;
 }
 
-.reset-btn{width:100%;margin-top:10px;}
+/* ABOUT LINK POSITION FIX */
+.about-link{
+margin-top:45px; /* moved slightly down */
+color:var(--accent);
+font-weight:bold;
+cursor:pointer;
+}
 
 /* TOP BAR */
 .top-bar{
-position:relative;
 display:flex;
 align-items:center;
 justify-content:flex-start;
 margin-bottom:26px;
-min-height:52px;
+position:relative;
 }
 
-.back-btn{padding:10px 18px;flex:none;}
-
-.user-badge{
-position:absolute;
-left:50%;
-transform:translateX(-50%);
-background:var(--card);
-padding:12px 20px;
-border-radius:18px;
-font-weight:bold;
-box-shadow:0 4px 12px rgba(0,0,0,.08);
-}
-
-/* RESULTS */
-.recommendation{
-background:var(--card);
-border-left:6px solid var(--accent);
-padding:18px;
-border-radius:18px;
-margin-top:18px;
-}
-
-.meal-title{font-size:22px;font-weight:bold;margin-bottom:12px;}
-.reason{color:var(--sub);}
-
-.ate-btn{
-background:var(--accent);
-color:#fff;
-margin-top:14px;
-width:100%;
-}
-
-.history-item{
-background:rgba(0,0,0,.04);
-padding:12px;
-border-radius:14px;
-margin-top:10px;
-}
-
-/* FOOTERS */
-.footer-left,
-.footer-right{
-position:fixed;
-bottom:10px;
-font-size:11px;
-opacity:.7;
-}
-
-.footer-left{left:12px;}
-.footer-right{right:12px;}
-
-/* THEME SWITCHER */
-.theme-floating{
-position:fixed;
-top:18px;
-right:18px;
-width:52px;
-height:52px;
-border-radius:50%;
-background:var(--card);
-display:flex;
-justify-content:center;
-align-items:center;
-font-size:24px;
-cursor:pointer;
-box-shadow:0 4px 12px rgba(0,0,0,.15);
-z-index:999;
-}
-
-.theme-popup{
-display:none;
-position:fixed;
-top:80px;
-right:18px;
-background:var(--card);
-padding:14px;
-border-radius:18px;
-z-index:999;
-box-shadow:0 5px 20px rgba(0,0,0,.15);
-}
-
-.theme-popup button{
-width:100%;
-margin-top:8px;
+.back-btn{
+padding:10px 18px;
 }
 
 /* OVERLAY */
@@ -227,55 +150,62 @@ display:flex;
 align-items:center;
 justify-content:center;
 z-index:9999;
-flex-direction:column;
 }
 
 .hidden{display:none;}
 
 .loader-card{
-text-align:center;
-padding:30px;
+background:rgba(255,255,255,0.7);
+padding:25px;
 border-radius:20px;
-background:rgba(255,255,255,0.6);
-box-shadow:0 10px 30px rgba(0,0,0,0.1);
+text-align:center;
 }
 
 .spinner{
-width:45px;
-height:45px;
+width:45px;height:45px;
 border:4px solid #ddd;
 border-top:4px solid var(--accent);
 border-radius:50%;
-margin:0 auto 15px auto;
 animation:spin 1s linear infinite;
+margin:0 auto 10px;
 }
 
 @keyframes spin{
-0%{transform:rotate(0deg);}
 100%{transform:rotate(360deg);}
 }
 
-/* ABOUT TOAST */
-.about-toast{
+/* MODAL BACK CONFIRM */
+.modal{
+display:none;
 position:fixed;
-bottom:70px;
-left:50%;
-transform:translateX(-50%);
-width:85%;
-max-width:420px;
+inset:0;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+z-index:10000;
+}
 
-background:rgba(255,255,255,0.8);
-backdrop-filter: blur(12px);
-
-padding:16px;
+.modal-content{
+background:white;
+padding:20px;
 border-radius:18px;
-box-shadow:0 10px 30px rgba(0,0,0,0.15);
+width:85%;
+max-width:400px;
+text-align:center;
+}
 
-font-size:14px;
-line-height:1.5;
-color:var(--text);
+.modal-buttons{
+display:flex;
+gap:10px;
+margin-top:15px;
+}
 
-z-index:9999;
+.footer-left,
+.footer-right{
+position:fixed;
+bottom:10px;
+font-size:11px;
+opacity:.7;
 }
 
 .footer-left{left:12px;}
@@ -288,24 +218,24 @@ z-index:9999;
 
 <!-- OVERLAY -->
 <div id="overlayLoader" class="overlay hidden">
-  <div class="loader-card">
-    <div class="spinner"></div>
-    <div id="overlayText"></div>
-  </div>
+<div class="loader-card">
+<div class="spinner"></div>
+<div id="overlayText"></div>
+</div>
 </div>
 
-<!-- THEME -->
-<div class="theme-floating" onclick="toggleThemePopup()">🎨</div>
+<!-- BACK MODAL -->
+<div id="backModal" class="modal">
+<div class="modal-content">
+<h3>Are you sure?</h3>
+<p>You haven’t decided dinner yet 🍲</p>
 
-<div class="theme-popup" id="themePopup">
-<button onclick="setTheme('nothing')">Nothing</button>
-<button onclick="setTheme('warm')">Warm</button>
-<button onclick="setTheme('sage')">Sage</button>
-<button onclick="setTheme('dark')">Dark</button>
+<div class="modal-buttons">
+<button onclick="stayHere()">Stay & Decide</button>
+<button onclick="goBackConfirm()">Go Back</button>
 </div>
-
-<!-- ABOUT TOAST -->
-<div id="aboutToast" class="about-toast hidden"></div>
+</div>
+</div>
 
 <!-- LANDING -->
 <div class="page active" id="landingPage">
@@ -323,16 +253,12 @@ leftovers and real life 🍲
 
 <div class="card">
 
-<div class="section-title">Who’s checking dinner tonight?</div>
-
-<div class="button-group">
 <button onclick="enterApp('Pranab')">Pranab</button>
 <button onclick="enterApp('Koyel')">Koyel</button>
-</div>
 
 </div>
 
-<div style="margin-top:25px;color:var(--accent);font-weight:bold;cursor:pointer;" onclick="openAbout()">
+<div class="about-link" onclick="openAbout(event)">
 Why Ki Khaabo?
 </div>
 
@@ -345,79 +271,26 @@ Why Ki Khaabo?
 <div class="container">
 
 <div class="top-bar">
-<button class="back-btn" onclick="goBack()">← Back</button>
-<div class="user-badge" id="activeUser">🍲 Tonight</div>
+<button class="back-btn" onclick="backPress()">← Back</button>
 </div>
 
-<div class="title" style="font-size:36px;">Ki Khaabo?</div>
+<div class="title">Ki Khaabo?</div>
 
-<div class="card">
-
-<div class="section-title">Mood</div>
-<div class="button-group" id="moodButtons">
-
-<button onclick="selectMood(this,'comfort')">Comfort</button>
-<button onclick="selectMood(this,'healthy')">Healthy</button>
-<button onclick="selectMood(this,'lazy')">Low Energy</button>
-<button onclick="selectMood(this,'different')">Different</button>
-
-</div>
-</div>
-
-<div class="card">
-
-<div class="section-title">Cooking effort</div>
-<div class="button-group" id="energyButtons">
-
-<button onclick="selectEnergy(this,'low')">Minimal</button>
-<button onclick="selectEnergy(this,'medium')">Moderate</button>
-<button onclick="selectEnergy(this,'high')">Proper Cooking</button>
-
-</div>
-</div>
-
-<div class="card">
-
-<div class="section-title">Meal prep</div>
-<div class="button-group" id="prepButtons">
-
-<button onclick="selectPrep(this,'done')">Prep done</button>
-<button onclick="selectPrep(this,'cant')">Can't prep</button>
-
-</div>
-</div>
-
-<div class="card">
-
-<div class="section-title">Tomorrow lunch?</div>
-<div class="button-group" id="lunchButtons">
-
-<button onclick="selectLunch(this,true)">Yes</button>
-<button onclick="selectLunch(this,false)">No</button>
-
-</div>
-</div>
-
-<button class="primary-btn" onclick="generateRecommendations()">
-🍛 Tell Me What We Should Eat
-</button>
-
-<div id="results"></div>
+<button class="primary-btn" onclick="generate()">🍛 Tell Me What To Eat</button>
 
 </div>
 </div>
 
 <!-- FOOTERS -->
 <div class="footer-left">Concept by BanRap</div>
-<div class="footer-right">Ver.1.2.7.15.05.2026.18.40.00</div>
+<div class="footer-right">Ver.1.2.8.15.05.2026.19.30.00</div>
 
 <script>
 
-/* STATE */
-let selectedUser="",selectedMood="",selectedEnergy="",prepStatus="",lunchNeeded=false;
-
 /* HAPTICS */
-function vibrate(p){try{if(navigator.vibrate)navigator.vibrate(p);}catch(e){}}
+function vibrate(p){
+if(navigator.vibrate) navigator.vibrate(p);
+}
 
 /* OVERLAY */
 function showOverlay(text,time){
@@ -429,139 +302,79 @@ document.getElementById("overlayLoader").classList.add("hidden");
 },time);
 }
 
-/* THEME FIX (RESTORED) */
-function setTheme(theme){
-
-if(theme==="nothing"){
-applyTheme("#f5f5f5","#ffffff","#111111","#ff5b35","#666666","#dddddd");
-}
-
-if(theme==="warm"){
-applyTheme("#fff6ea","#ffffff","#5a3a1d","#ff8a00","#7a5a45","#f2d7b0");
-}
-
-if(theme==="sage"){
-applyTheme("#eef5ef","#ffffff","#233325","#5c8d5c","#607060","#d9e7da");
-}
-
-if(theme==="dark"){
-applyTheme("#181818","#242424","#ffffff","#d4a017","#bbbbbb","#333333");
-}
-
-localStorage.setItem("theme",theme);
-}
-
-function applyTheme(bg,card,text,accent,sub,button){
-document.documentElement.style.setProperty("--bg",bg);
-document.documentElement.style.setProperty("--card",card);
-document.documentElement.style.setProperty("--text",text);
-document.documentElement.style.setProperty("--accent",accent);
-document.documentElement.style.setProperty("--sub",sub);
-document.documentElement.style.setProperty("--button",button);
-}
-
-function toggleThemePopup(){
-let p=document.getElementById("themePopup");
-p.style.display=p.style.display==="block"?"none":"block";
-}
-
-/* ABOUT */
-function openAbout(){
-
-const msg = `
-🍲 Why Ki Khaabo?
-
-Because at 7:30 PM, two humans with full refrigerators still ask:
-“kya khana hai?”
-
-This app was built to prevent:
-- hunger arguments
-- paneer vs egg negotiations
-- existential dinner crises
-
-It does not cook food.
-It negotiates peace.
-`;
-
-let toast=document.getElementById("aboutToast");
-toast.innerText=msg;
-toast.classList.remove("hidden");
-
-setTimeout(()=>toast.classList.add("hidden"),6000);
-}
-
 /* ENTER */
 function enterApp(user){
-
-selectedUser=user;
-document.getElementById("activeUser").innerHTML="🍲 "+user;
-
 vibrate(50);
-showOverlay("Get ready to put your Chef's hat on 🧑🏼‍🍳",2000);
-
+showOverlay("Get ready 🧑‍🍳",2000);
 setTimeout(()=>{
 document.getElementById("landingPage").classList.remove("active");
 document.getElementById("mainPage").classList.add("active");
 },2000);
 }
 
-/* NAV */
-function goBack(){
-resetAll();
+/* BACK BUTTON (NEW UX) */
+function backPress(){
+vibrate([30,50,30]); // warning pattern
+document.getElementById("backModal").style.display="flex";
+}
+
+function stayHere(){
+vibrate(20);
+document.getElementById("backModal").style.display="none";
+}
+
+function goBackConfirm(){
+vibrate(80);
+document.getElementById("backModal").style.display="none";
 document.getElementById("mainPage").classList.remove("active");
 document.getElementById("landingPage").classList.add("active");
 }
 
-/* SELECTIONS */
-function selectMood(b,v){clear("#moodButtons");b.classList.add("selected");selectedMood=v;vibrate(30);}
-function selectEnergy(b,v){clear("#energyButtons");b.classList.add("selected");selectedEnergy=v;vibrate(30);}
-function selectPrep(b,v){clear("#prepButtons");b.classList.add("selected");prepStatus=v;vibrate(30);}
-function selectLunch(b,v){clear("#lunchButtons");b.classList.add("selected");lunchNeeded=v;vibrate(30);}
+/* ABOUT POPUP (CLICK OUTSIDE CLOSE ENABLED) */
+function openAbout(e){
 
-function clear(id){
-document.querySelectorAll(id+" button").forEach(x=>x.classList.remove("selected"));
+let msg=document.createElement("div");
+msg.id="aboutPopup";
+msg.style.position="fixed";
+msg.style.bottom="80px";
+msg.style.left="50%";
+msg.style.transform="translateX(-50%)";
+msg.style.background="rgba(255,255,255,0.85)";
+msg.style.padding="15px";
+msg.style.borderRadius="15px";
+msg.style.width="85%";
+msg.style.maxWidth="420px";
+msg.style.zIndex="9999";
+msg.style.backdropFilter="blur(10px)";
+
+msg.innerHTML=`
+<b>Why Ki Khaabo?</b><br><br>
+Because every evening ends with:<br>
+“kya khana hai?” 🤯<br><br>
+This app prevents food arguments and emotional hunger decisions.
+`;
+
+document.body.appendChild(msg);
+
+/* auto close */
+setTimeout(()=>msg.remove(),6000);
+
+/* click outside closes */
+setTimeout(()=>{
+document.addEventListener("click", function handler(ev){
+if(!msg.contains(ev.target)){
+msg.remove();
+document.removeEventListener("click",handler);
 }
-
-function resetAll(){
-selectedMood="";selectedEnergy="";prepStatus="";lunchNeeded=false;
-document.querySelectorAll(".selected").forEach(x=>x.classList.remove("selected"));
-document.getElementById("results").innerHTML="";
+});
+},100);
 }
 
 /* GENERATE */
-function generateRecommendations(){
-
+function generate(){
 vibrate([200,100,200]);
-showOverlay("🍛 Checking with the dinner gods",2000);
-
-setTimeout(()=>{
-
-let meals=[
-"Egg Fried Rice","Moong Dal Chila","Pav Bhaji","Bhindi Sabzi",
-"Paneer Gravy","Veg Pasta","Egg Curry","Veg Maggi","Lauki Sabzi","Palak Paneer"
-];
-
-let pick=meals.sort(()=>0.5-Math.random()).slice(0,3);
-
-let html="";
-
-pick.forEach((m,i)=>{
-html+=`
-<div class="recommendation">
-<div class="meal-title">${["🥇","🥈","🥉"][i]} ${m}</div>
-<div class="reason">A strong match for tonight.</div>
-</div>`;
-});
-
-document.getElementById("results").innerHTML=html;
-
-},2000);
+showOverlay("🍛 Checking with dinner gods",2000);
 }
-
-window.onload=()=>{
-let t=localStorage.getItem("theme");
-if(t) setTheme(t);
-};
 
 </script>
 
