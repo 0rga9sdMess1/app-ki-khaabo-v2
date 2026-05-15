@@ -9,34 +9,39 @@
 Ki Khaabo?
 Concept by BanRap
 
-VER: v1.2.9.2.15.05.2026.22.25.00
+VER: v1.2.9.3.15.05.2026.22.42.00
 
 CHANGELOG:
 
 FIXED:
-- Theme switcher now properly applies themes instantly
-- Theme persistence restored using localStorage
-- Pranab / Koyel buttons restored to horizontal layout
-- Questionnaire button groups restored to proper flex layout
-- Single-selection logic fixed for every questionnaire category
-- Back modal state leak fixed
-- Overlay loader cleanup fixed after navigation
+- Reset Choices button restored below recommendation button
+- Selections now fully reset when returning to landing page
+- Results section resets correctly on back navigation
+- Dark mode text readability fixed (light grey text)
+- Back navigation now performs full state cleanup
+- Theme switching logic stabilized
+- Questionnaire layout restored properly
+- Single-selection bug fixed
+- Theme persistence fixed using localStorage
 
 ADDED:
-- Haptic feedback for selections
-- Haptic feedback for landing transition
-- Long haptic feedback for recommendation generation
-- Transparent loading overlay system
-- Symmetrical back confirmation modal
+- Proper resetState() system for future scalability
+- Haptic feedback system
+- Transparent loading overlays
+- Back confirmation modal
+- About popup dismiss by outside click
+- Symmetrical modal buttons
 
-IMPROVED:
-- UI restored closer to stable v1.2.4 baseline
-- Better separation between UI and state logic
-- Cleaner mobile spacing and button grouping
+PREVIOUS FEATURES RETAINED:
+- Theme switcher
+- Loading animations
+- Haptic feedback for selections
+- Long vibration for meal generation
+- Smooth transitions
 
 UNCHANGED:
-- Meal recommendation engine still placeholder/random logic
-- Intelligence engine (Option C) not implemented yet
+- Recommendation engine still lightweight/random
+- Full meal intelligence engine pending future build
 -->
 
 <style>
@@ -117,6 +122,7 @@ padding:20px;
 border-radius:22px;
 box-shadow:0 6px 18px rgba(0,0,0,.08);
 margin-top:20px;
+width:100%;
 }
 
 .section-title{
@@ -168,6 +174,13 @@ background:var(--accent);
 color:#fff;
 margin-top:20px;
 font-size:16px;
+}
+
+.reset-btn{
+width:100%;
+margin-top:12px;
+background:var(--button);
+color:var(--text);
 }
 
 .top-bar{
@@ -404,7 +417,7 @@ Ki Khaabo?
 
 <div class="section-title">Mood</div>
 
-<div class="button-group" data-group="mood">
+<div class="button-group">
 <button onclick="selectOption(this)">Comfort</button>
 <button onclick="selectOption(this)">Healthy</button>
 <button onclick="selectOption(this)">Low Energy</button>
@@ -417,7 +430,7 @@ Ki Khaabo?
 
 <div class="section-title">Cooking Effort</div>
 
-<div class="button-group" data-group="effort">
+<div class="button-group">
 <button onclick="selectOption(this)">Minimal</button>
 <button onclick="selectOption(this)">Moderate</button>
 <button onclick="selectOption(this)">Proper Cooking</button>
@@ -429,7 +442,7 @@ Ki Khaabo?
 
 <div class="section-title">Meal Prep</div>
 
-<div class="button-group" data-group="prep">
+<div class="button-group">
 <button onclick="selectOption(this)">Prep Done</button>
 <button onclick="selectOption(this)">Can't Prep</button>
 </div>
@@ -440,7 +453,7 @@ Ki Khaabo?
 
 <div class="section-title">Tomorrow Lunch?</div>
 
-<div class="button-group" data-group="lunch">
+<div class="button-group">
 <button onclick="selectOption(this)">Yes</button>
 <button onclick="selectOption(this)">No</button>
 </div>
@@ -449,6 +462,10 @@ Ki Khaabo?
 
 <button class="primary-btn" onclick="generateMeals()">
 🍛 Tell Me What We Should Eat
+</button>
+
+<button class="reset-btn" onclick="resetState()">
+Reset Choices
 </button>
 
 <div id="results"></div>
@@ -461,7 +478,7 @@ Concept by BanRap
 </div>
 
 <div class="footer-right">
-v1.2.9.2
+v1.2.9.3
 </div>
 
 <script>
@@ -479,9 +496,13 @@ const meals=[
 ];
 
 function vibrate(pattern){
+
 if(navigator.vibrate){
+
 navigator.vibrate(pattern);
+
 }
+
 }
 
 /* THEME */
@@ -505,7 +526,8 @@ if(theme==="dark"){
 
 root.style.setProperty("--bg","#181818");
 root.style.setProperty("--card","#242424");
-root.style.setProperty("--text","#ffffff");
+root.style.setProperty("--text","#dddddd");
+root.style.setProperty("--sub","#aaaaaa");
 root.style.setProperty("--button","#333333");
 root.style.setProperty("--accent","#d4a017");
 
@@ -516,6 +538,7 @@ else if(theme==="warm"){
 root.style.setProperty("--bg","#fff6ea");
 root.style.setProperty("--card","#ffffff");
 root.style.setProperty("--text","#5a3a1d");
+root.style.setProperty("--sub","#7a5a45");
 root.style.setProperty("--button","#f2d7b0");
 root.style.setProperty("--accent","#ff8a00");
 
@@ -526,6 +549,7 @@ else if(theme==="sage"){
 root.style.setProperty("--bg","#eef5ef");
 root.style.setProperty("--card","#ffffff");
 root.style.setProperty("--text","#233325");
+root.style.setProperty("--sub","#607060");
 root.style.setProperty("--button","#d9e7da");
 root.style.setProperty("--accent","#5c8d5c");
 
@@ -536,6 +560,7 @@ else{
 root.style.setProperty("--bg","#f5f5f5");
 root.style.setProperty("--card","#ffffff");
 root.style.setProperty("--text","#111111");
+root.style.setProperty("--sub","#666666");
 root.style.setProperty("--button","#dddddd");
 root.style.setProperty("--accent","#ff5b35");
 
@@ -550,8 +575,6 @@ localStorage.setItem("theme",theme);
 applyTheme(theme);
 
 }
-
-/* LOAD THEME */
 
 window.onload=()=>{
 
@@ -651,11 +674,25 @@ function goBack(){
 document.getElementById("backModal")
 .style.display="none";
 
+resetState();
+
 document.getElementById("main")
 .classList.remove("active");
 
 document.getElementById("landing")
 .classList.add("active");
+
+}
+
+/* RESET */
+
+function resetState(){
+
+document.querySelectorAll(".selected")
+.forEach(x=>x.classList.remove("selected"));
+
+document.getElementById("results")
+.innerHTML="";
 
 }
 
