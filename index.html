@@ -9,31 +9,34 @@
 Ki Khaabo?
 Concept by BanRap
 
-VER: v1.2.9.1.15.05.2026.21.30.00
+VER: v1.2.9.2.15.05.2026.22.25.00
 
 CHANGELOG:
 
 FIXED:
-- Theme switcher fully restored and functional across sessions
-- Questionnaire fully restored (Mood, Cooking Effort, Prep, Lunch)
-- Landing page layout restored (header + subtitle alignment corrected)
-- "Why Ki Khaabo?" popup interaction fixed (tap outside closes properly)
-- Back button modal symmetry fixed
+- Theme switcher now properly applies themes instantly
+- Theme persistence restored using localStorage
+- Pranab / Koyel buttons restored to horizontal layout
+- Questionnaire button groups restored to proper flex layout
+- Single-selection logic fixed for every questionnaire category
+- Back modal state leak fixed
+- Overlay loader cleanup fixed after navigation
 
 ADDED:
-- Landing → Main transition loading screen with haptics
-- Main action "Tell me what to eat" loading overlay with long vibration
-- Tap-to-close About popup behavior
-- Structured haptic feedback system (light / medium / long patterns)
+- Haptic feedback for selections
+- Haptic feedback for landing transition
+- Long haptic feedback for recommendation generation
+- Transparent loading overlay system
+- Symmetrical back confirmation modal
 
 IMPROVED:
-- UI spacing aligned back to stable v1.2.4 layout baseline
-- Overlay system unified for both transitions
-- Theme system stability improved (persistent storage ready)
+- UI restored closer to stable v1.2.4 baseline
+- Better separation between UI and state logic
+- Cleaner mobile spacing and button grouping
 
 UNCHANGED:
-- Meal recommendation engine remains random v1 logic
-- No AI scoring engine yet (Option C pending)
+- Meal recommendation engine still placeholder/random logic
+- Intelligence engine (Option C) not implemented yet
 -->
 
 <style>
@@ -51,18 +54,23 @@ UNCHANGED:
 box-sizing:border-box;
 margin:0;
 padding:0;
-font-family:Arial, sans-serif;
+font-family:Arial,sans-serif;
 }
 
 body{
 background:var(--bg);
 color:var(--text);
-transition:0.3s;
+transition:.3s;
 }
 
-/* PAGES */
-.page{display:none;min-height:100vh;}
-.active{display:block;}
+.page{
+display:none;
+min-height:100vh;
+}
+
+.active{
+display:block;
+}
 
 .container{
 max-width:550px;
@@ -71,7 +79,6 @@ padding:20px;
 padding-bottom:100px;
 }
 
-/* LANDING */
 .landing{
 display:flex;
 flex-direction:column;
@@ -87,7 +94,7 @@ position:absolute;
 width:260px;
 height:260px;
 background:radial-gradient(circle,var(--accent),transparent 70%);
-opacity:0.12;
+opacity:.12;
 border-radius:50%;
 filter:blur(30px);
 top:90px;
@@ -104,16 +111,38 @@ color:var(--sub);
 line-height:1.6;
 }
 
-/* CARD */
 .card{
 background:var(--card);
 padding:20px;
 border-radius:22px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);
+box-shadow:0 6px 18px rgba(0,0,0,.08);
 margin-top:20px;
 }
 
-/* BUTTONS */
+.section-title{
+font-weight:bold;
+margin-bottom:12px;
+}
+
+.choice-row{
+display:flex;
+gap:10px;
+}
+
+.choice-row button{
+flex:1;
+}
+
+.button-group{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+}
+
+.button-group button{
+flex:1 1 45%;
+}
+
 button{
 border:none;
 padding:14px;
@@ -121,9 +150,7 @@ border-radius:16px;
 cursor:pointer;
 background:var(--button);
 font-weight:bold;
-width:100%;
-margin-top:8px;
-transition:0.2s;
+transition:.2s;
 }
 
 button:hover{
@@ -132,17 +159,17 @@ transform:scale(1.03);
 
 .selected{
 background:var(--accent)!important;
-color:white!important;
+color:#fff!important;
 }
 
 .primary-btn{
+width:100%;
 background:var(--accent);
-color:white;
+color:#fff;
 margin-top:20px;
 font-size:16px;
 }
 
-/* TOP BAR */
 .top-bar{
 display:flex;
 align-items:center;
@@ -151,10 +178,8 @@ margin-bottom:26px;
 
 .back-btn{
 padding:10px 16px;
-width:auto;
 }
 
-/* THEME */
 .theme-floating{
 position:fixed;
 top:18px;
@@ -168,6 +193,7 @@ justify-content:center;
 align-items:center;
 cursor:pointer;
 z-index:999;
+box-shadow:0 4px 12px rgba(0,0,0,.15);
 }
 
 .theme-popup{
@@ -179,6 +205,7 @@ background:var(--card);
 padding:14px;
 border-radius:18px;
 z-index:999;
+box-shadow:0 5px 20px rgba(0,0,0,.15);
 }
 
 .theme-popup button{
@@ -186,42 +213,26 @@ width:100%;
 margin-top:8px;
 }
 
-/* QUESTIONNAIRE */
-.section-title{
-font-weight:bold;
-margin:10px 0;
-}
-
-.button-group{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-/* OVERLAY */
 .overlay{
 position:fixed;
 inset:0;
-background:rgba(255,255,255,0.75);
+background:rgba(255,255,255,.75);
 backdrop-filter:blur(10px);
 display:flex;
 align-items:center;
 justify-content:center;
 z-index:9999;
+flex-direction:column;
+gap:18px;
 }
 
-.hidden{display:none;}
-
-.loader-card{
-text-align:center;
-padding:25px;
-border-radius:20px;
-background:rgba(255,255,255,0.75);
+.hidden{
+display:none;
 }
 
 .spinner{
-width:45px;
-height:45px;
+width:50px;
+height:50px;
 border:4px solid #ddd;
 border-top:4px solid var(--accent);
 border-radius:50%;
@@ -232,48 +243,20 @@ animation:spin 1s linear infinite;
 100%{transform:rotate(360deg);}
 }
 
-/* ABOUT */
-.about-toast{
-position:fixed;
-bottom:70px;
-left:50%;
-transform:translateX(-50%);
-width:85%;
-max-width:420px;
-background:rgba(255,255,255,0.9);
-backdrop-filter:blur(10px);
-padding:16px;
-border-radius:18px;
-z-index:9999;
-}
-
-/* FOOTER */
-.footer-left,
-.footer-right{
-position:fixed;
-bottom:10px;
-font-size:11px;
-opacity:0.7;
-}
-
-.footer-left{left:12px;}
-.footer-right{right:12px;}
-
-/* BACK MODAL */
 .modal{
 display:none;
 position:fixed;
 inset:0;
-background:rgba(0,0,0,0.5);
+background:rgba(0,0,0,.5);
 justify-content:center;
 align-items:center;
 z-index:10000;
 }
 
 .modal-content{
-background:white;
-padding:20px;
-border-radius:18px;
+background:var(--card);
+padding:22px;
+border-radius:20px;
 width:85%;
 max-width:400px;
 text-align:center;
@@ -282,19 +265,65 @@ text-align:center;
 .modal-buttons{
 display:flex;
 gap:12px;
-margin-top:15px;
+margin-top:18px;
 }
 
 .modal-buttons button{
 flex:1;
 }
 
+.recommendation{
+background:var(--card);
+border-left:6px solid var(--accent);
+padding:18px;
+border-radius:18px;
+margin-top:18px;
+}
+
+.meal-title{
+font-size:22px;
+font-weight:bold;
+margin-bottom:10px;
+}
+
+.about-link{
+margin-top:40px;
+color:var(--accent);
+font-weight:bold;
+cursor:pointer;
+}
+
+.about-toast{
+position:fixed;
+bottom:70px;
+left:50%;
+transform:translateX(-50%);
+width:85%;
+max-width:420px;
+background:rgba(255,255,255,.88);
+backdrop-filter:blur(10px);
+padding:18px;
+border-radius:18px;
+z-index:9999;
+line-height:1.6;
+}
+
+.footer-left,
+.footer-right{
+position:fixed;
+bottom:10px;
+font-size:11px;
+opacity:.7;
+}
+
+.footer-left{left:12px;}
+.footer-right{right:12px;}
+
 </style>
 </head>
 
 <body>
 
-<!-- THEME -->
 <div class="theme-floating" onclick="toggleTheme()">🎨</div>
 
 <div class="theme-popup" id="themePopup">
@@ -304,28 +333,26 @@ flex:1;
 <button onclick="setTheme('dark')">Dark</button>
 </div>
 
-<!-- OVERLAY -->
 <div id="overlay" class="overlay hidden">
-<div class="loader-card">
 <div class="spinner"></div>
 <div id="overlayText"></div>
 </div>
-</div>
 
-<!-- BACK MODAL -->
 <div id="backModal" class="modal">
 <div class="modal-content">
+
 <h3>Go back without deciding?</h3>
-<p>Dinner is still pending 🍲</p>
 
 <div class="modal-buttons">
 <button onclick="stay()">Stay & Decide</button>
 <button onclick="goBack()">Go Back</button>
 </div>
+
 </div>
 </div>
 
 <!-- LANDING -->
+
 <div class="page active" id="landing">
 
 <div class="container landing">
@@ -341,15 +368,18 @@ leftovers and real life 🍲
 
 <div class="card">
 
-<div class="section-title">Who’s checking dinner tonight?</div>
+<div class="section-title">
+Who’s checking dinner tonight?
+</div>
 
-<button onclick="enter('Pranab')">Pranab</button>
-<button onclick="enter('Koyel')">Koyel</button>
+<div class="choice-row">
+<button onclick="enterApp()">Pranab</button>
+<button onclick="enterApp()">Koyel</button>
+</div>
 
 </div>
 
-<div style="margin-top:40px;color:var(--accent);font-weight:bold;cursor:pointer;"
-onclick="openAbout()">
+<div class="about-link" onclick="openAbout()">
 Why Ki Khaabo?
 </div>
 
@@ -357,6 +387,7 @@ Why Ki Khaabo?
 </div>
 
 <!-- MAIN -->
+
 <div class="page" id="main">
 
 <div class="container">
@@ -365,135 +396,333 @@ Why Ki Khaabo?
 <button class="back-btn" onclick="backPress()">← Back</button>
 </div>
 
-<div class="title">Ki Khaabo?</div>
+<div class="title" style="font-size:36px;">
+Ki Khaabo?
+</div>
 
 <div class="card">
+
 <div class="section-title">Mood</div>
-<button onclick="select(this)">Comfort</button>
-<button onclick="select(this)">Healthy</button>
-<button onclick="select(this)">Low Energy</button>
-<button onclick="select(this)">Different</button>
+
+<div class="button-group" data-group="mood">
+<button onclick="selectOption(this)">Comfort</button>
+<button onclick="selectOption(this)">Healthy</button>
+<button onclick="selectOption(this)">Low Energy</button>
+<button onclick="selectOption(this)">Different</button>
+</div>
+
 </div>
 
 <div class="card">
+
 <div class="section-title">Cooking Effort</div>
-<button onclick="select(this)">Minimal</button>
-<button onclick="select(this)">Moderate</button>
-<button onclick="select(this)">Proper</button>
+
+<div class="button-group" data-group="effort">
+<button onclick="selectOption(this)">Minimal</button>
+<button onclick="selectOption(this)">Moderate</button>
+<button onclick="selectOption(this)">Proper Cooking</button>
+</div>
+
 </div>
 
 <div class="card">
+
 <div class="section-title">Meal Prep</div>
-<button onclick="select(this)">Done</button>
-<button onclick="select(this)">Can't Prep</button>
+
+<div class="button-group" data-group="prep">
+<button onclick="selectOption(this)">Prep Done</button>
+<button onclick="selectOption(this)">Can't Prep</button>
+</div>
+
 </div>
 
 <div class="card">
-<div class="section-title">Tomorrow Lunch</div>
-<button onclick="select(this)">Yes</button>
-<button onclick="select(this)">No</button>
+
+<div class="section-title">Tomorrow Lunch?</div>
+
+<div class="button-group" data-group="lunch">
+<button onclick="selectOption(this)">Yes</button>
+<button onclick="selectOption(this)">No</button>
 </div>
 
-<button class="primary-btn" onclick="generate()">
+</div>
+
+<button class="primary-btn" onclick="generateMeals()">
 🍛 Tell Me What We Should Eat
 </button>
 
+<div id="results"></div>
+
 </div>
 </div>
 
-<!-- FOOTER -->
-<div class="footer-left">Concept by BanRap</div>
-<div class="footer-right">v1.2.9.1.15.05.2026.21.30.00</div>
+<div class="footer-left">
+Concept by BanRap
+</div>
+
+<div class="footer-right">
+v1.2.9.2
+</div>
 
 <script>
 
+const meals=[
+"Egg Fried Rice",
+"Moong Dal Chila",
+"Bhindi Sabzi",
+"Paneer Gravy",
+"Egg Curry",
+"Veg Pasta",
+"Maggi",
+"Dal Khichdi",
+"Butter Garlic Fried Rice"
+];
+
 function vibrate(pattern){
-if(navigator.vibrate) navigator.vibrate(pattern);
+if(navigator.vibrate){
+navigator.vibrate(pattern);
+}
 }
 
 /* THEME */
+
 function toggleTheme(){
-let p=document.getElementById("themePopup");
-p.style.display=p.style.display==="block"?"none":"block";
+
+const popup=document.getElementById("themePopup");
+
+popup.style.display=
+popup.style.display==="block"
+?"none"
+:"block";
+
 }
 
-function setTheme(t){
-localStorage.setItem("theme",t);
+function applyTheme(theme){
+
+const root=document.documentElement;
+
+if(theme==="dark"){
+
+root.style.setProperty("--bg","#181818");
+root.style.setProperty("--card","#242424");
+root.style.setProperty("--text","#ffffff");
+root.style.setProperty("--button","#333333");
+root.style.setProperty("--accent","#d4a017");
+
 }
+
+else if(theme==="warm"){
+
+root.style.setProperty("--bg","#fff6ea");
+root.style.setProperty("--card","#ffffff");
+root.style.setProperty("--text","#5a3a1d");
+root.style.setProperty("--button","#f2d7b0");
+root.style.setProperty("--accent","#ff8a00");
+
+}
+
+else if(theme==="sage"){
+
+root.style.setProperty("--bg","#eef5ef");
+root.style.setProperty("--card","#ffffff");
+root.style.setProperty("--text","#233325");
+root.style.setProperty("--button","#d9e7da");
+root.style.setProperty("--accent","#5c8d5c");
+
+}
+
+else{
+
+root.style.setProperty("--bg","#f5f5f5");
+root.style.setProperty("--card","#ffffff");
+root.style.setProperty("--text","#111111");
+root.style.setProperty("--button","#dddddd");
+root.style.setProperty("--accent","#ff5b35");
+
+}
+
+}
+
+function setTheme(theme){
+
+localStorage.setItem("theme",theme);
+
+applyTheme(theme);
+
+}
+
+/* LOAD THEME */
+
+window.onload=()=>{
+
+const saved=
+localStorage.getItem("theme") || "light";
+
+applyTheme(saved);
+
+};
 
 /* ABOUT */
+
 function openAbout(){
+
 vibrate(30);
 
-let box=document.createElement("div");
+const box=document.createElement("div");
+
 box.className="about-toast";
 
 box.innerHTML=`
 <b>Why Ki Khaabo?</b><br><br>
-Because deciding dinner at 8 PM is harder than work.<br>
-This app exists to reduce emotional food negotiations.
+Because “What should we eat tonight?”
+is somehow the hardest question after office hours.
+This app exists to reduce emotional food negotiations 🍲
 `;
 
 document.body.appendChild(box);
 
 function close(e){
+
 if(!box.contains(e.target)){
+
 box.remove();
+
 document.removeEventListener("click",close);
-}
-}
 
-setTimeout(()=>document.addEventListener("click",close),100);
-setTimeout(()=>box.remove(),6000);
 }
 
-/* NAV */
-function enter(user){
-vibrate(50);
-
-document.getElementById("overlay").classList.remove("hidden");
-document.getElementById("overlayText").innerText="Get ready 🧑‍🍳";
+}
 
 setTimeout(()=>{
-document.getElementById("landing").classList.remove("active");
-document.getElementById("main").classList.add("active");
-document.getElementById("overlay").classList.add("hidden");
+
+document.addEventListener("click",close);
+
+},100);
+
+}
+
+/* ENTER */
+
+function enterApp(){
+
+vibrate(50);
+
+document.getElementById("overlay")
+.classList.remove("hidden");
+
+document.getElementById("overlayText")
+.innerText="Get ready to put your Chef's hat on 🧑🏼‍🍳";
+
+setTimeout(()=>{
+
+document.getElementById("landing")
+.classList.remove("active");
+
+document.getElementById("main")
+.classList.add("active");
+
+document.getElementById("overlay")
+.classList.add("hidden");
+
 },2000);
+
 }
 
 /* BACK */
+
 function backPress(){
+
 vibrate([20,40,20]);
-document.getElementById("backModal").style.display="flex";
+
+document.getElementById("backModal")
+.style.display="flex";
+
 }
 
 function stay(){
-vibrate(20);
-document.getElementById("backModal").style.display="none";
+
+document.getElementById("backModal")
+.style.display="none";
+
 }
 
 function goBack(){
-vibrate(80);
-document.getElementById("main").classList.remove("active");
-document.getElementById("landing").classList.add("active");
+
+document.getElementById("backModal")
+.style.display="none";
+
+document.getElementById("main")
+.classList.remove("active");
+
+document.getElementById("landing")
+.classList.add("active");
+
 }
 
-/* SELECT */
-function select(btn){
-vibrate(10);
-btn.classList.toggle("selected");
+/* SINGLE SELECT */
+
+function selectOption(btn){
+
+vibrate(15);
+
+const group=
+btn.parentElement.querySelectorAll("button");
+
+group.forEach(b=>b.classList.remove("selected"));
+
+btn.classList.add("selected");
+
 }
 
 /* GENERATE */
-function generate(){
+
+function generateMeals(){
+
 vibrate([200,100,200]);
 
-document.getElementById("overlay").classList.remove("hidden");
-document.getElementById("overlayText").innerText="🍛 Checking with dinner gods";
+document.getElementById("overlay")
+.classList.remove("hidden");
+
+document.getElementById("overlayText")
+.innerText="🍛 Checking with the dinner gods";
 
 setTimeout(()=>{
-document.getElementById("overlay").classList.add("hidden");
+
+document.getElementById("overlay")
+.classList.add("hidden");
+
+const picks=
+[...meals]
+.sort(()=>0.5-Math.random())
+.slice(0,3);
+
+let html="";
+
+picks.forEach((m,i)=>{
+
+html+=`
+
+<div class="recommendation">
+
+<div class="meal-title">
+${["🥇","🥈","🥉"][i]} ${m}
+</div>
+
+<div>
+A strong match for tonight's mood and logistics.
+</div>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("results")
+.innerHTML=html;
+
 },2000);
+
 }
 
 </script>
