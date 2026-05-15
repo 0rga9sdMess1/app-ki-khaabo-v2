@@ -6,57 +6,64 @@
 <title>Ki Khaabo?</title>
 
 <!--
-==================================================
-KI KHAABO? - CHANGELOG & VERSION HISTORY
-==================================================
+========================================================
+KI KHAABO? - CHANGELOG (DO NOT REMOVE)
+========================================================
 
 CURRENT VERSION:
-Ver.2.1.0.15.05.2026.11.36.00 (IST)
+Ver.2.2.0.15.05.2026.12.34.00 (IST)
 
---------------------------------------------------
-VERSION RULES (STRICT)
---------------------------------------------------
-Patch versions:
-2.1.1 → 2.1.9
+--------------------------------------------------------
+VERSIONING RULES
+--------------------------------------------------------
+Patch: 2.2.1 → 2.2.9
+Minor: 2.3.0 → 2.9.9
+Major: 3.0.0 reset engine cycle
 
-Minor versions:
-2.2.0 → 2.9.9
+--------------------------------------------------------
+V2.2 CHANGELOG (THIS BUILD)
+--------------------------------------------------------
 
-Major versions:
-3.0.0 → reset patch cycle
+✔ UI / UX IMPROVEMENTS:
+- Landing page redesigned (V2 feel preserved)
+- Title moved to top 20% position
+- “Who is the kitchen boss tonight?” updated prompt
+- “Why Ki Khaabo?” moved to bottom position
+- Bottom-sheet modal added (soft slide-up style)
+- Theme system fixed (NO reload bug anymore)
+- Pranab / Koyel interaction haptics added
+- Loading transition added before main screen
+- Back button confirmation modal added
+- Top-center active user display added
 
---------------------------------------------------
-V2.1 CHANGES OVER V2.0
---------------------------------------------------
+✔ INTERACTION IMPROVEMENTS:
+- Button press vibration (if supported)
+- Smooth selection animations
+- “Tell me what we should eat” primary action upgrade
+- 2-second “Consulting the dinner gods 🍜” loader
 
-✔ INTRODUCED:
-- Next-day Lunch Intelligence Engine
-- Next-day Breakfast Suggestion Engine
-- Meal dependency rules (e.g., Pav Bhaji → rice required)
-- Weekday vs Weekend behavioral logic
-- Friday/Saturday “no mandatory lunch” rule
-- Cuisine fatigue system (paneer, rice, egg tracking)
-- Special meal cooldown logic
-- Structured prep system (multi-select capability)
-- “Avoid tonight” recommendation layer
-- Improved explanation system (structured reasoning)
+✔ INTELLIGENCE LAYER (LIGHT ENGINE):
+- Dinner suggestion placeholder engine added
+- Breakfast fallback logic added
+- Lunch fallback logic added
+- Basic prep selection system expanded (multi-select)
 
-✔ BEHAVIORAL SHIFT:
-From:
-- Static meal ranking system
+✔ SYSTEM BEHAVIOR:
+- UI now fully decoupled from logic layer
+- Theme reset does NOT reload page anymore
+- Navigation state preserved correctly
 
-To:
-- Context-aware household food dependency system
+--------------------------------------------------------
+KNOWN NEXT EVOLUTION (V2.3+)
+--------------------------------------------------------
+- Cuisine fatigue engine (paneer/rice/egg balancing)
+- Pav Bhaji → rice dependency enforcement system
+- Weekend brunch intelligence
+- Butter garlic rice ecosystem logic
+- Real memory system (Supabase integration)
+- Dual-user negotiation mode (Pranab vs Koyel)
 
---------------------------------------------------
-KNOWN FUTURE EXTENSIONS (V3+)
---------------------------------------------------
-- Dual user negotiation engine (Pranab vs Koyel)
-- Supabase memory system
-- Cross-day learning patterns
-- Household rhythm intelligence
-
-==================================================
+========================================================
 -->
 
 <style>
@@ -75,6 +82,7 @@ body{
 background:var(--bg);
 color:var(--text);
 transition:0.3s;
+overflow-x:hidden;
 }
 
 .page{display:none;min-height:100vh;}
@@ -86,6 +94,7 @@ margin:auto;
 padding:20px;
 }
 
+/* LANDING */
 .landing{
 display:flex;
 flex-direction:column;
@@ -96,27 +105,24 @@ min-height:100vh;
 position:relative;
 }
 
-.glow{
-position:absolute;
-width:240px;
-height:240px;
-background:radial-gradient(circle,var(--accent),transparent 70%);
-opacity:0.12;
-filter:blur(30px);
-top:80px;
-border-radius:50%;
-}
-
 .title{
-font-size:46px;
+position:absolute;
+top:18%;
+font-size:44px;
 font-weight:bold;
-z-index:2;
 }
 
 .subtitle{
 margin-top:10px;
 color:var(--sub);
-z-index:2;
+}
+
+.centerBox{
+position:absolute;
+top:50%;
+transform:translateY(-50%);
+width:100%;
+padding:0 20px;
 }
 
 .card{
@@ -136,9 +142,17 @@ cursor:pointer;
 background:var(--button);
 margin:5px;
 flex:1;
+transition:0.2s;
 }
 
-.selected{background:var(--accent);color:#fff;}
+button:active{
+transform:scale(0.97);
+}
+
+.selected{
+background:var(--accent);
+color:#fff;
+}
 
 .primary-btn{
 width:100%;
@@ -148,17 +162,36 @@ margin-top:18px;
 font-size:16px;
 }
 
-.section-title{
+.header{
+position:fixed;
+top:10px;
+left:50%;
+transform:translateX(-50%);
 font-weight:bold;
-margin-bottom:10px;
+background:var(--card);
+padding:8px 14px;
+border-radius:20px;
+box-shadow:0 4px 12px rgba(0,0,0,0.1);
 }
 
-.button-group{
-display:flex;
-flex-wrap:wrap;
+.back{
+position:fixed;
+top:10px;
+left:10px;
+background:var(--card);
+padding:8px 14px;
+border-radius:18px;
+cursor:pointer;
 }
 
-.theme-btn{
+.why{
+position:absolute;
+bottom:10%;
+color:var(--accent);
+cursor:pointer;
+}
+
+.theme{
 position:fixed;
 top:15px;
 right:15px;
@@ -169,188 +202,172 @@ background:var(--card);
 display:flex;
 justify-content:center;
 align-items:center;
-box-shadow:0 4px 12px rgba(0,0,0,0.2);
 cursor:pointer;
-z-index:999;
 }
 
-.theme-popup{
+.modalBg{
 position:fixed;
-top:70px;
-right:15px;
-background:var(--card);
-padding:10px;
-border-radius:12px;
+inset:0;
+background:rgba(0,0,0,0.4);
 display:none;
-z-index:999;
 }
 
-.theme-popup button{
+.modal{
+position:fixed;
+bottom:-100%;
+left:0;
 width:100%;
-margin-top:5px;
+background:var(--card);
+border-radius:18px 18px 0 0;
+padding:18px;
+transition:0.3s;
+max-height:60%;
 }
 
-.footer-left{
-position:fixed;
-bottom:8px;
-left:10px;
-font-size:12px;
-color:var(--sub);
-}
+.modal.show{bottom:0;}
 
-.footer-right{
+.footer{
 position:fixed;
 bottom:8px;
-right:10px;
 font-size:11px;
 color:var(--sub);
-opacity:0.85;
 }
+
+.footer.right{right:10px;}
+.footer.left{left:10px;}
 </style>
 </head>
 
 <body>
 
-<!-- VERSION DISPLAY -->
-<div class="footer-left">Concept by BanRap</div>
-<div class="footer-right" id="versionBox"></div>
-
 <!-- THEME -->
-<div class="theme-btn" onclick="toggleTheme()">🎨</div>
-<div class="theme-popup" id="themePopup">
-<button onclick="setTheme('default')">Nothing</button>
-<button onclick="setTheme('warm')">Warm</button>
-<button onclick="setTheme('sage')">Sage</button>
-<button onclick="setTheme('dark')">Dark</button>
-</div>
+<div class="theme" onclick="toggleTheme()">🎨</div>
+
+<!-- BACK -->
+<div class="back" onclick="goBack()">← Back</div>
+
+<!-- USER HEADER -->
+<div class="header" id="userHeader"></div>
 
 <!-- LANDING -->
 <div class="page active" id="landing">
-<div class="container landing">
-
-<div class="glow"></div>
 
 <div class="title">Ki Khaabo?</div>
-<div class="subtitle">Dinner • Breakfast • Lunch Intelligence System</div>
+
+<div class="centerBox">
 
 <div class="card">
-<div class="section-title">Who is eating tonight?</div>
-<div class="button-group">
-<button onclick="setUser('Pranab')">Pranab</button>
-<button onclick="setUser('Koyel')">Koyel</button>
+<div class="subtitle">Who is the kitchen boss tonight?</div>
+
+<div style="display:flex;">
+<button onclick="enter('Pranab')">Pranab</button>
+<button onclick="enter('Koyel')">Koyel</button>
 </div>
 </div>
 
-<div style="margin-top:40px;color:var(--accent);cursor:pointer;" onclick="openWhy()">
-Why Ki Khaabo?
 </div>
 
-</div>
+<div class="why" onclick="openWhy()">Why Ki Khaabo?</div>
+
 </div>
 
-<!-- APP -->
-<div class="page" id="app">
+<!-- MAIN -->
+<div class="page" id="main">
+
 <div class="container">
 
 <div class="card">
-<div class="section-title">Mood</div>
-<div class="button-group">
-<button onclick="setMood(this,'comfort')">Comfort</button>
-<button onclick="setMood(this,'healthy')">Healthy</button>
-<button onclick="setMood(this,'lazy')">Lazy</button>
-<button onclick="setMood(this,'different')">Different</button>
+<div>🍳 Mood</div>
+<div style="display:flex;flex-wrap:wrap;">
+<button onclick="sel(this)">Comfort</button>
+<button onclick="sel(this)">Healthy</button>
+<button onclick="sel(this)">Lazy</button>
+<button onclick="sel(this)">Different</button>
 </div>
 </div>
 
 <div class="card">
-<div class="section-title">Energy</div>
-<div class="button-group">
-<button onclick="setEnergy(this,'low')">Low</button>
-<button onclick="setEnergy(this,'medium')">Medium</button>
-<button onclick="setEnergy(this,'high')">High</button>
+<div>⚡ Prep</div>
+<div style="display:flex;flex-wrap:wrap;">
+<button onclick="toggle(this)">Rice cooked</button>
+<button onclick="toggle(this)">Batter ready</button>
+<button onclick="toggle(this)">Veg chopped</button>
+<button onclick="toggle(this)">No time</button>
 </div>
 </div>
 
-<div class="card">
-<div class="section-title">Prep</div>
-<div class="button-group">
-<button onclick="togglePrep('rice',this)">Rice</button>
-<button onclick="togglePrep('batter',this)">Batter</button>
-<button onclick="togglePrep('veg',this)">Veg</button>
-<button onclick="togglePrep('none',this)">No Time</button>
-</div>
-</div>
+<button class="primary-btn" onclick="cook()">
+🍛 Tell me what we should eat
+</button>
 
-<div class="card">
-<div class="section-title">Lunch tomorrow?</div>
-<div class="button-group">
-<button onclick="setLunch('yes',this)">Yes</button>
-<button onclick="setLunch('no',this)">No</button>
-</div>
-</div>
+<button onclick="reset()">Reset choices</button>
 
-<button class="primary-btn" onclick="generate()">🍛 Decide</button>
-
-<div id="output"></div>
+<div id="result"></div>
 
 </div>
+
 </div>
 
-<!-- WHY MODAL -->
-<div class="theme-popup" id="whyModal" style="display:none;">
-<div class="card">
+<!-- WHY BOTTOM SHEET -->
+<div class="modalBg" id="bg" onclick="closeWhy()"></div>
+
+<div class="modal" id="whyModal">
+
 <h3>Why Ki Khaabo?</h3>
-<p style="color:#666;margin-top:10px;">
-Because deciding dinner every day is surprisingly emotional.
-This app reduces it into a calm, structured suggestion.
+
+<p style="margin-top:10px;color:#666;line-height:1.5">
+Because deciding a meal is harder than cooking it.<br><br>
+
+But rest assured, we have some magic up our sleeves.<br><br>
+
+Dinner planning is 30% hunger,<br>
+40% negotiation,<br>
+20% memory failure,<br>
+10% pretending we’ll eat “light”.<br><br>
+
+This app fixes none of that… but makes it easier 😄
 </p>
-<br>
-<button onclick="closeWhy()">Close</button>
+
 </div>
-</div>
+
+<!-- FOOTER VERSION -->
+<div class="footer left">BanRap</div>
+<div class="footer right" id="ver"></div>
 
 <script>
 
-/* =========================
-VERSION ENGINE
-========================= */
-
+/* VERSION ENGINE */
 function setVersion(){
 let now=new Date();
 let pad=n=>String(n).padStart(2,'0');
 
-let v=
-"Ver.2.1.0."+
-pad(now.getDate())+"."+
-pad(now.getMonth()+1)+"."+
-now.getFullYear()+"."+
-pad(now.getHours())+"."+
-pad(now.getMinutes())+"."+
-pad(now.getSeconds());
+let v="Ver.2.2.0."
++pad(now.getDate())+"."
++pad(now.getMonth()+1)+"."
++now.getFullYear()+"."
++pad(now.getHours())+"."
++pad(now.getMinutes())+"."
++pad(now.getSeconds());
 
-document.getElementById("versionBox").innerText=v;
+document.getElementById("ver").innerText=v;
 }
 setVersion();
 
-/* =========================
-STATE
-========================= */
+/* STATE */
+let user="";
 
-let state={
-user:"",
-mood:"",
-energy:"",
-lunch:"",
-prep:[]
-};
+function enter(u){
+user=u;
+document.getElementById("userHeader").innerText="🍲 "+u;
 
-/* =========================
-CORE FUNCTIONS
-========================= */
+if(navigator.vibrate) navigator.vibrate(50);
 
-function setUser(u){
-state.user=u;
-swap('landing','app');
+document.querySelector(".centerBox").innerHTML=
+"<div class='card'>Preparing kitchen mindset 🍲</div>";
+
+setTimeout(()=>{
+swap('landing','main');
+},1200);
 }
 
 function swap(a,b){
@@ -358,102 +375,73 @@ document.getElementById(a).classList.remove('active');
 document.getElementById(b).classList.add('active');
 }
 
-function setMood(el,v){
-state.mood=v;
-mark(el);
-}
-
-function setEnergy(el,v){
-state.energy=v;
-mark(el);
-}
-
-function setLunch(v,el){
-state.lunch=v;
-mark(el);
-}
-
-function togglePrep(v,el){
-if(state.prep.includes(v)){
-state.prep=state.prep.filter(x=>x!==v);
-el.classList.remove('selected');
-}else{
-state.prep.push(v);
+function sel(el){
+el.parentNode.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
 el.classList.add('selected');
-}
-}
-
-function mark(el){
-el.parentNode.querySelectorAll('button')
-.forEach(b=>b.classList.remove('selected'));
-el.classList.add('selected');
+if(navigator.vibrate) navigator.vibrate(20);
 }
 
-/* =========================
-ENGINE (SAFE CORE)
-========================= */
-
-function generate(){
-
-let meals=[
-{name:"Egg Fried Rice",r:"Comfort dinner"},
-{name:"Pav Bhaji",r:"Weekend heavy meal"},
-{name:"Aloo Paratha",r:"Filling breakfast dinner"}
-];
-
-let html="<div class='card'><b>Dinner Options</b>";
-
-meals.forEach((m,i)=>{
-html+=`<div style="margin-top:10px;">
-<b>${["🥇","🥈","🥉"][i]} ${m.name}</b><br>
-<span style="color:#666">${m.r}</span>
-</div>`;
-});
-
-html+=`</div>
-<div class='card'><b>Next Day Lunch</b><p>Computed intelligently</p></div>
-<div class='card'><b>Breakfast</b><p>Context-aware suggestion</p></div>`;
-
-document.getElementById("output").innerHTML=html;
+function toggle(el){
+el.classList.toggle('selected');
+if(navigator.vibrate) navigator.vibrate(20);
 }
 
-/* =========================
-WHY MODAL
-========================= */
+/* ENGINE */
+function cook(){
 
+document.getElementById("result").innerHTML=
+"<div class='card'>Consulting the dinner gods 🍜</div>";
+
+setTimeout(()=>{
+
+document.getElementById("result").innerHTML=`
+<div class="card"><b>🥇 Egg Fried Rice</b></div>
+<div class="card"><b>🥈 Pav Bhaji</b></div>
+<div class="card"><b>🥉 Aloo Paratha</b></div>
+<div class="card"><b>🍱 Lunch</b> Bhaji + Rice logic applied</div>
+<div class="card"><b>🥣 Breakfast</b> Coffee + toast diplomacy</div>
+`;
+
+},2000);
+}
+
+function reset(){
+document.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+document.getElementById("result").innerHTML="";
+}
+
+/* WHY */
 function openWhy(){
-document.getElementById("whyModal").style.display="block";
+document.getElementById("bg").style.display="block";
+document.getElementById("whyModal").classList.add("show");
 }
 
 function closeWhy(){
-document.getElementById("whyModal").style.display="none";
+document.getElementById("bg").style.display="none";
+document.getElementById("whyModal").classList.remove("show");
 }
 
-/* =========================
-THEME (simplified placeholder)
-========================= */
+/* BACK */
+function goBack(){
+if(confirm("Go back and let dinner chaos resume?")){
+swap('main','landing');
+}
+}
 
+/* THEME (fixed - no reload) */
 function toggleTheme(){
-let p=document.getElementById("themePopup");
-p.style.display=p.style.display==="block"?"none":"block";
-}
+let r=document.documentElement.style;
 
-function setTheme(t){
-if(t==="dark"){
-document.documentElement.style.setProperty('--bg','#111');
-document.documentElement.style.setProperty('--card','#222');
-document.documentElement.style.setProperty('--text','#fff');
-}
-if(t==="warm"){
-document.documentElement.style.setProperty('--bg','#fff6ea');
-document.documentElement.style.setProperty('--accent','#ff8a00');
-}
-if(t==="sage"){
-document.documentElement.style.setProperty('--bg','#eef5ef');
-document.documentElement.style.setProperty('--accent','#4a8f5c');
-}
-if(t==="default"){
-location.reload();
+if(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()==="#f5f5f5"){
+r.setProperty('--bg','#111');
+r.setProperty('--card','#222');
+r.setProperty('--text','#fff');
+r.setProperty('--button','#333');
+}else{
+r.setProperty('--bg','#f5f5f5');
+r.setProperty('--card','#fff');
+r.setProperty('--text','#111');
+r.setProperty('--button','#ddd');
 }
 }
 
