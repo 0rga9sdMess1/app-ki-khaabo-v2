@@ -12,19 +12,23 @@ Concept by BanRap
 
 CHANGELOG
 
-Ver.1.2.5.15.05.2026.14.10.00
-Built on top of v1.2.4 stable (NO CORE CHANGES)
+Ver.1.2.4.15.05.2026.04.28.00
 
-- Added haptic feedback layer (non-invasive)
-- Added selection vibration for all UI inputs
-- Added long vibration for final decision button
-- Added immersive 2s loading overlay (enter + generate flow)
-- Preserved full v1.2.4 UI, logic, theme system, and meal engine
+- Stable rebuild refinement
+- Centered user badge
+- Improved top bar symmetry
+- Compact back button
+- Added meal prep question
+- Added “Didn't / can't prep today”
+- Improved landing page spacing
+- Improved homepage glow
+- Fixed button state logic
+- Fixed reset behavior
+- Fixed duplicate meal logging
 -->
 
 <style>
 
-/* ===== YOUR ORIGINAL CSS (UNCHANGED) ===== */
 :root{
 --bg:#f5f5f5;
 --card:#ffffff;
@@ -47,8 +51,14 @@ color:var(--text);
 transition:.25s;
 }
 
-.page{display:none;min-height:100vh;}
-.active{display:block;}
+.page{
+display:none;
+min-height:100vh;
+}
+
+.active{
+display:block;
+}
 
 .container{
 max-width:550px;
@@ -78,8 +88,20 @@ filter:blur(30px);
 top:90px;
 }
 
-.title{font-size:46px;font-weight:bold;position:relative;z-index:2;}
-.subtitle{margin-top:14px;color:var(--sub);line-height:1.6;}
+.title{
+font-size:46px;
+font-weight:bold;
+position:relative;
+z-index:2;
+}
+
+.subtitle{
+margin-top:14px;
+color:var(--sub);
+line-height:1.6;
+position:relative;
+z-index:2;
+}
 
 .card{
 background:var(--card);
@@ -114,7 +136,9 @@ flex:1;
 transition:.2s;
 }
 
-button:active{transform:scale(0.98);}
+button:hover{
+transform:scale(1.03);
+}
 
 .selected{
 background:var(--accent)!important;
@@ -151,6 +175,23 @@ box-shadow:0 4px 12px rgba(0,0,0,.15);
 z-index:999;
 }
 
+.theme-popup{
+display:none;
+position:fixed;
+top:80px;
+right:18px;
+background:var(--card);
+padding:14px;
+border-radius:18px;
+z-index:999;
+box-shadow:0 5px 20px rgba(0,0,0,.15);
+}
+
+.theme-popup button{
+width:100%;
+margin-top:8px;
+}
+
 .about-link{
 margin-top:70px;
 color:var(--accent);
@@ -167,7 +208,11 @@ margin-bottom:26px;
 min-height:52px;
 }
 
-.back-btn{padding:10px 18px;}
+.back-btn{
+padding:10px 18px;
+min-width:auto;
+flex:none;
+}
 
 .user-badge{
 position:absolute;
@@ -189,9 +234,23 @@ border-radius:18px;
 margin-top:18px;
 }
 
-.meal-title{font-size:22px;font-weight:bold;margin-bottom:12px;}
-.reason{color:var(--sub);}
-.ate-btn{width:100%;margin-top:14px;}
+.meal-title{
+font-size:22px;
+font-weight:bold;
+margin-bottom:12px;
+}
+
+.reason{
+color:var(--sub);
+line-height:1.6;
+}
+
+.ate-btn{
+background:var(--accent);
+color:#fff;
+margin-top:14px;
+width:100%;
+}
 
 .history-item{
 background:rgba(0,0,0,.04);
@@ -200,49 +259,57 @@ border-radius:14px;
 margin-top:10px;
 }
 
-.loader{text-align:center;margin-top:25px;color:var(--sub);}
+.footer-left{
+position:fixed;
+bottom:10px;
+left:12px;
+font-size:12px;
+opacity:.7;
+}
 
-/* ===== OVERLAY ===== */
-#overlay{
+.footer-right{
+position:fixed;
+bottom:10px;
+right:12px;
+font-size:12px;
+opacity:.7;
+}
+
+.loader{
+text-align:center;
+margin-top:25px;
+color:var(--sub);
+font-size:18px;
+}
+
+.modal{
+display:none;
 position:fixed;
 inset:0;
-display:none;
+background:rgba(0,0,0,.55);
 justify-content:center;
 align-items:center;
-background:rgba(0,0,0,0.45);
-backdrop-filter:blur(6px);
-z-index:2000;
-color:white;
-flex-direction:column;
-text-align:center;
-padding:20px;
+z-index:1000;
 }
 
-.spinner{
-width:40px;
-height:40px;
-border:4px solid rgba(255,255,255,0.3);
-border-top:4px solid white;
-border-radius:50%;
-animation:spin 1s linear infinite;
-margin-bottom:12px;
+.modal-content{
+background:var(--card);
+padding:25px;
+border-radius:22px;
+width:90%;
+max-width:500px;
+line-height:1.8;
 }
 
-@keyframes spin{
-0%{transform:rotate(0deg);}
-100%{transform:rotate(360deg);}
+.close-modal{
+margin-top:20px;
+width:100%;
 }
 
 </style>
 </head>
 
 <body>
-
-<!-- LOADING OVERLAY -->
-<div id="overlay">
-<div class="spinner"></div>
-<div id="overlayText">Cooking magic...</div>
-</div>
 
 <div class="theme-floating" onclick="toggleThemePopup()">🎨</div>
 
@@ -253,13 +320,17 @@ margin-bottom:12px;
 <button onclick="setTheme('dark')">Dark</button>
 </div>
 
-<!-- LANDING -->
+<!-- LANDING PAGE -->
+
 <div class="page active" id="landingPage">
+
 <div class="container landing">
 
 <div class="glow"></div>
 
-<div class="title">Ki Khaabo?</div>
+<div class="title">
+Ki Khaabo?
+</div>
 
 <div class="subtitle">
 Balancing comfort, health,<br>
@@ -267,132 +338,537 @@ leftovers and real life 🍲
 </div>
 
 <div class="card">
-<div class="section-title">Who’s checking dinner tonight?</div>
+
+<div class="section-title">
+Who’s checking dinner tonight?
+</div>
 
 <div class="button-group">
-<button onclick="enterApp('Pranab')">Pranab</button>
-<button onclick="enterApp('Koyel')">Koyel</button>
+<button onclick="enterApp('Pranab')">
+Pranab
+</button>
+
+<button onclick="enterApp('Koyel')">
+Koyel
+</button>
 </div>
 
 </div>
 
-<div class="about-link" onclick="openAbout()">Why Ki Khaabo?</div>
+<div class="about-link" onclick="openAbout()">
+Why Ki Khaabo?
+</div>
 
 </div>
+
 </div>
 
 <!-- MAIN PAGE -->
+
 <div class="page" id="mainPage">
+
 <div class="container">
 
 <div class="top-bar">
-<button class="back-btn" onclick="goBack()">← Back</button>
-<div class="user-badge" id="activeUser">🍲 Tonight</div>
+
+<button class="back-btn" onclick="goBack()">
+← Back
+</button>
+
+<div class="user-badge" id="activeUser">
+🍲 Tonight
 </div>
 
-<div class="title" style="font-size:36px;">Ki Khaabo?</div>
+</div>
+
+<div class="title" style="font-size:36px;">
+Ki Khaabo?
+</div>
+
+<!-- MOOD -->
 
 <div class="card">
-<div class="section-title">Mood</div>
-<div class="button-group">
-<button onclick="selectOption(this)">Comfort</button>
-<button onclick="selectOption(this)">Healthy</button>
-<button onclick="selectOption(this)">Low Energy</button>
-<button onclick="selectOption(this)">Different</button>
+
+<div class="section-title">
+Mood
 </div>
+
+<div class="button-group" id="moodButtons">
+
+<button onclick="selectMood(this,'comfort')">
+Comfort
+</button>
+
+<button onclick="selectMood(this,'healthy')">
+Healthy
+</button>
+
+<button onclick="selectMood(this,'lazy')">
+Low Energy
+</button>
+
+<button onclick="selectMood(this,'different')">
+Different
+</button>
+
+</div>
+
+</div>
+
+<!-- COOKING EFFORT -->
+
+<div class="card">
+
+<div class="section-title">
+Cooking effort
+</div>
+
+<div class="button-group" id="energyButtons">
+
+<button onclick="selectEnergy(this,'low')">
+Minimal
+</button>
+
+<button onclick="selectEnergy(this,'medium')">
+Moderate
+</button>
+
+<button onclick="selectEnergy(this,'high')">
+Proper Cooking
+</button>
+
+</div>
+
+</div>
+
+<!-- PREP -->
+
+<div class="card">
+
+<div class="section-title">
+Meal prep status
+</div>
+
+<div class="button-group" id="prepButtons">
+
+<button onclick="selectPrep(this,'done')">
+Meal prep done
+</button>
+
+<button onclick="selectPrep(this,'cant')">
+Didn't / can't prep today
+</button>
+
+</div>
+
+</div>
+
+<!-- LUNCH -->
+
+<div class="card">
+
+<div class="section-title">
+Tomorrow lunch?
+</div>
+
+<div class="button-group" id="lunchButtons">
+
+<button onclick="selectLunch(this,true)">
+Yes
+</button>
+
+<button onclick="selectLunch(this,false)">
+No
+</button>
+
+</div>
+
 </div>
 
 <button class="primary-btn" onclick="generateRecommendations()">
 🍛 Tell Me What We Should Eat
 </button>
 
-<button class="reset-btn" onclick="resetAll()">Reset Choices</button>
+<button class="reset-btn" onclick="resetAll()">
+Reset Choices
+</button>
 
 <div id="loader"></div>
+
 <div id="results"></div>
 
+<div class="card">
+
+<div class="section-title">
+Recent Meals
 </div>
+
+<div id="history"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ABOUT MODAL -->
+
+<div class="modal" id="aboutModal">
+
+<div class="modal-content">
+
+<h2>Why Ki Khaabo?</h2>
+
+<p>
+Because dinner decisions are emotional logistics.
+Balancing cravings, health, leftovers and mood is harder than recipes.
+This app gently helps decide what feels right tonight.
+</p>
+
+<button class="close-modal" onclick="closeAbout()">
+Close
+</button>
+
+</div>
+
+</div>
+
+<div class="footer-left">
+Concept by BanRap
+</div>
+
+<div class="footer-right">
+Ver.1.2.4
 </div>
 
 <script>
 
-/* ===== HAPTICS LAYER ===== */
-function haptic(type){
-if(!navigator.vibrate) return;
+let selectedUser="";
+let selectedMood="";
+let selectedEnergy="";
+let prepStatus="";
+let lunchNeeded=false;
 
-if(type==="soft") navigator.vibrate(25);
-if(type==="medium") navigator.vibrate(50);
-if(type==="long") navigator.vibrate([80,40,120]);
+const meals=[
+
+"Egg Fried Rice",
+"Moong Dal Chila",
+"Pav Bhaji",
+"Bhindi Sabzi",
+"Paneer Gravy",
+"Veg Pasta",
+"Egg Curry",
+"Veg Maggi",
+"Lauki Sabzi",
+"Palak Paneer"
+
+];
+
+function toggleThemePopup(){
+
+let p=document.getElementById("themePopup");
+
+p.style.display=
+p.style.display==="block"?"none":"block";
+
 }
 
-/* ===== OVERLAY ===== */
-function showOverlay(text){
-document.getElementById("overlayText").innerText=text;
-document.getElementById("overlay").style.display="flex";
+function setTheme(theme){
+
+if(theme==="nothing"){
+css("#f5f5f5","#fff","#111","#ff5b35","#666","#ddd");
 }
 
-function hideOverlay(){
-document.getElementById("overlay").style.display="none";
+if(theme==="warm"){
+css("#fff6ea","#fff","#5a3a1d","#ff8a00","#7a5a45","#f2d7b0");
 }
 
-/* ===== ENTER APP ===== */
+if(theme==="sage"){
+css("#eef5ef","#fff","#233325","#5c8d5c","#607060","#d9e7da");
+}
+
+if(theme==="dark"){
+css("#181818","#242424","#ffffff","#d4a017","#bbbbbb","#333333");
+}
+
+localStorage.setItem("theme",theme);
+
+}
+
+function css(bg,card,text,accent,sub,button){
+
+document.documentElement.style
+.setProperty("--bg",bg);
+
+document.documentElement.style
+.setProperty("--card",card);
+
+document.documentElement.style
+.setProperty("--text",text);
+
+document.documentElement.style
+.setProperty("--accent",accent);
+
+document.documentElement.style
+.setProperty("--sub",sub);
+
+document.documentElement.style
+.setProperty("--button",button);
+
+}
+
 function enterApp(user){
-haptic("soft");
 
-showOverlay("Let’s put our chef hats on 🧑‍🍳");
+selectedUser=user;
 
-setTimeout(()=>{
-hideOverlay();
-document.getElementById("activeUser").innerText="🍲 "+user;
+document.getElementById("activeUser")
+.innerHTML="🍲 "+user;
+
+resetAll();
+
 swap("landingPage","mainPage");
-},2000);
-}
 
-/* ===== OPTIONS ===== */
-function selectOption(btn){
-haptic("soft");
-document.querySelectorAll(".button-group button")
-.forEach(b=>b.classList.remove("selected"));
-btn.classList.add("selected");
-}
-
-/* ===== GENERATE ===== */
-function generateRecommendations(){
-haptic("long");
-
-showOverlay("Consulting the dinner gods 🍜");
-
-setTimeout(()=>{
-hideOverlay();
-
-document.getElementById("results").innerHTML=`
-<div class="recommendation">
-<div class="meal-title">🥇 Egg Fried Rice</div>
-<div class="reason">Based on your current mood & energy.</div>
-</div>
-`;
-
-},2000);
-}
-
-/* ===== BASIC LOGIC (UNCHANGED) ===== */
-function swap(a,b){
-document.getElementById(a).classList.remove("active");
-document.getElementById(b).classList.add("active");
 }
 
 function goBack(){
+
+resetAll();
+
 swap("mainPage","landingPage");
+
+}
+
+function swap(from,to){
+
+document.getElementById(from)
+.classList.remove("active");
+
+document.getElementById(to)
+.classList.add("active");
+
+}
+
+function selectMood(btn,m){
+
+clear("#moodButtons");
+
+btn.classList.add("selected");
+
+selectedMood=m;
+
+}
+
+function selectEnergy(btn,m){
+
+clear("#energyButtons");
+
+btn.classList.add("selected");
+
+selectedEnergy=m;
+
+}
+
+function selectPrep(btn,m){
+
+clear("#prepButtons");
+
+btn.classList.add("selected");
+
+prepStatus=m;
+
+}
+
+function selectLunch(btn,m){
+
+clear("#lunchButtons");
+
+btn.classList.add("selected");
+
+lunchNeeded=m;
+
+}
+
+function clear(id){
+
+document.querySelectorAll(id+" button")
+.forEach(b=>b.classList.remove("selected"));
+
 }
 
 function resetAll(){
+
+selectedMood="";
+selectedEnergy="";
+prepStatus="";
+lunchNeeded=false;
+
 document.querySelectorAll(".selected")
 .forEach(x=>x.classList.remove("selected"));
+
+document.getElementById("results").innerHTML="";
+document.getElementById("loader").innerHTML="";
+
+}
+
+function generateRecommendations(){
+
+document.getElementById("loader")
+.innerHTML=
+"<div class='loader'>Consulting the dinner gods... 🍲</div>";
+
+setTimeout(()=>{
+
+document.getElementById("loader").innerHTML="";
+
+let pick=
+meals.sort(()=>0.5-Math.random())
+.slice(0,3);
+
+let html="";
+
+pick.forEach((m,i)=>{
+
+html+=`
+
+<div class="recommendation">
+
+<div class="meal-title">
+${["🥇","🥈","🥉"][i]} ${m}
+</div>
+
+<div class="reason">
+A strong match for tonight’s mood and logistics.
+</div>
+
+<button class="ate-btn"
+onclick="saveMeal('${m}')">
+
+We Ate This
+
+</button>
+
+</div>
+
+`;
+
+});
+
+document.getElementById("results").innerHTML=html;
+
+},1300);
+
+}
+
+function saveMeal(meal){
+
+let history=
+JSON.parse(
+localStorage.getItem("mealHistory")||"[]"
+);
+
+let today=
+new Date().toDateString();
+
+let existing=
+history.find(x=>x.day===today);
+
+if(existing){
+
+if(existing.name===meal){
+
+alert("Already recorded today 🍲");
+
+return;
+
+}
+
+if(
+!confirm(
+`Replace "${existing.name}" with "${meal}"?`
+)
+)return;
+
+history=
+history.filter(x=>x.day!==today);
+
+}
+
+history.unshift({
+
+name:meal,
+day:today,
+date:new Date().toLocaleString()
+
+});
+
+history=history.slice(0,5);
+
+localStorage.setItem(
+"mealHistory",
+JSON.stringify(history)
+);
+
+renderHistory();
+
+alert(meal+" saved 🍲");
+
+}
+
+function renderHistory(){
+
+let history=
+JSON.parse(
+localStorage.getItem("mealHistory")||"[]"
+);
+
+let html=
+history.length?
+
+history.map(h=>`
+
+<div class="history-item">
+
+<strong>${h.name}</strong><br>
+
+<small>${h.date}</small>
+
+</div>
+
+`).join("")
+
+:
+
+"No meals recorded yet.";
+
+document.getElementById("history")
+.innerHTML=html;
+
 }
 
 function openAbout(){
-alert("Because deciding a meal is harder than cooking it.");
+
+document.getElementById("aboutModal")
+.style.display="flex";
+
 }
+
+function closeAbout(){
+
+document.getElementById("aboutModal")
+.style.display="none";
+
+}
+
+window.onload=()=>{
+
+renderHistory();
+
+let t=
+localStorage.getItem("theme");
+
+if(t)setTheme(t);
+
+};
 
 </script>
 
