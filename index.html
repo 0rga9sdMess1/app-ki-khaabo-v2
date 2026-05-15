@@ -10,10 +10,9 @@
 Ki Khaabo?
 Concept by BanRap
 
-Ver.1.2.5.15.05.2026.16.00
+Ver.1.2.6.15.05.2026.18.04.00
 
-UI POLISH UPGRADE
-(No logic changes — only experience layer upgrade)
+UI RESTORE + MICRO UX POLISH
 -->
 
 <style>
@@ -73,8 +72,8 @@ filter:blur(30px);
 top:90px;
 }
 
-.title{font-size:46px;font-weight:bold;position:relative;z-index:2;}
-.subtitle{margin-top:14px;color:var(--sub);line-height:1.6;position:relative;z-index:2;}
+.title{font-size:46px;font-weight:bold;}
+.subtitle{margin-top:14px;color:var(--sub);line-height:1.6;}
 
 .card{
 background:var(--card);
@@ -155,7 +154,7 @@ margin-top:18px;
 }
 
 .meal-title{font-size:22px;font-weight:bold;margin-bottom:12px;}
-.reason{color:var(--sub);line-height:1.6;}
+.reason{color:var(--sub);}
 
 .ate-btn{
 background:var(--accent);
@@ -171,16 +170,7 @@ border-radius:14px;
 margin-top:10px;
 }
 
-/* LOADER TEXT */
-.loader{
-text-align:center;
-margin-top:25px;
-color:var(--sub);
-font-size:18px;
-}
-
-/* ===== OVERLAY SYSTEM (NEW) ===== */
-
+/* OVERLAY */
 .overlay{
 position:fixed;
 inset:0;
@@ -218,23 +208,59 @@ animation:spin 1s linear infinite;
 100%{transform:rotate(360deg);}
 }
 
-.overlay-text{
-font-size:16px;
-font-weight:bold;
-color:var(--text);
-line-height:1.5;
-}
-
-/* FOOTER */
-.footer-left,.footer-right{
+/* FOOTERS */
+.footer-left,
+.footer-right{
 position:fixed;
 bottom:10px;
-font-size:12px;
+font-size:11px;
 opacity:.7;
 }
 
 .footer-left{left:12px;}
 .footer-right{right:12px;}
+
+/* THEME SWITCHER */
+.theme-floating{
+position:fixed;
+top:18px;
+right:18px;
+width:52px;
+height:52px;
+border-radius:50%;
+background:var(--card);
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:24px;
+cursor:pointer;
+box-shadow:0 4px 12px rgba(0,0,0,.15);
+z-index:999;
+}
+
+.theme-popup{
+display:none;
+position:fixed;
+top:80px;
+right:18px;
+background:var(--card);
+padding:14px;
+border-radius:18px;
+z-index:999;
+box-shadow:0 5px 20px rgba(0,0,0,.15);
+}
+
+.theme-popup button{
+width:100%;
+margin-top:8px;
+}
+
+.about-link{
+margin-top:30px;
+color:var(--accent);
+font-weight:bold;
+cursor:pointer;
+}
 
 </style>
 </head>
@@ -245,10 +271,21 @@ opacity:.7;
 <div id="overlayLoader" class="overlay hidden">
   <div class="loader-card">
     <div class="spinner"></div>
-    <div id="overlayText" class="overlay-text"></div>
+    <div id="overlayText"></div>
   </div>
 </div>
 
+<!-- THEME -->
+<div class="theme-floating" onclick="toggleThemePopup()">🎨</div>
+
+<div class="theme-popup" id="themePopup">
+<button onclick="setTheme('nothing')">Nothing</button>
+<button onclick="setTheme('warm')">Warm</button>
+<button onclick="setTheme('sage')">Sage</button>
+<button onclick="setTheme('dark')">Dark</button>
+</div>
+
+<!-- LANDING -->
 <div class="page active" id="landingPage">
 
 <div class="container landing">
@@ -264,16 +301,17 @@ leftovers and real life 🍲
 
 <div class="card">
 
-<div class="section-title">
-Who’s checking dinner tonight?
-</div>
+<div class="section-title">Who’s checking dinner tonight?</div>
 
 <div class="button-group">
-
 <button onclick="enterApp('Pranab')">Pranab</button>
 <button onclick="enterApp('Koyel')">Koyel</button>
+</div>
 
 </div>
+
+<div class="about-link" onclick="openAbout()">
+Why Ki Khaabo?
 </div>
 
 </div>
@@ -285,17 +323,14 @@ Who’s checking dinner tonight?
 <div class="container">
 
 <div class="top-bar">
-
 <button class="back-btn" onclick="goBack()">← Back</button>
-
 <div class="user-badge" id="activeUser">🍲 Tonight</div>
-
 </div>
 
 <div class="title" style="font-size:36px;">Ki Khaabo?</div>
 
+<!-- INPUTS -->
 <div class="card">
-
 <div class="section-title">Mood</div>
 <div class="button-group" id="moodButtons">
 
@@ -308,7 +343,6 @@ Who’s checking dinner tonight?
 </div>
 
 <div class="card">
-
 <div class="section-title">Cooking effort</div>
 <div class="button-group" id="energyButtons">
 
@@ -320,7 +354,6 @@ Who’s checking dinner tonight?
 </div>
 
 <div class="card">
-
 <div class="section-title">Meal prep status</div>
 <div class="button-group" id="prepButtons">
 
@@ -331,7 +364,6 @@ Who’s checking dinner tonight?
 </div>
 
 <div class="card">
-
 <div class="section-title">Tomorrow lunch?</div>
 <div class="button-group" id="lunchButtons">
 
@@ -345,50 +377,26 @@ Who’s checking dinner tonight?
 🍛 Tell Me What We Should Eat
 </button>
 
-<button class="reset-btn" onclick="resetAll()">Reset</button>
-
 <div id="results"></div>
 
-<div class="card">
-<div class="section-title">Recent Meals</div>
-<div id="history"></div>
+</div>
 </div>
 
-</div>
-</div>
+<!-- FOOTERS -->
+<div class="footer-left">Concept by BanRap</div>
+<div class="footer-right">Ver.1.2.6.15.05.2026.18.04.00</div>
 
 <script>
 
-let selectedUser="";
-let selectedMood="";
-let selectedEnergy="";
-let prepStatus="";
-let lunchNeeded=false;
-
-const meals=[
-"Egg Fried Rice",
-"Moong Dal Chila",
-"Pav Bhaji",
-"Bhindi Sabzi",
-"Paneer Gravy",
-"Veg Pasta",
-"Egg Curry",
-"Veg Maggi",
-"Lauki Sabzi",
-"Palak Paneer"
-];
+let selectedUser="",selectedMood="",selectedEnergy="",prepStatus="",lunchNeeded=false;
 
 /* ===== HAPTICS ===== */
-function vibrate(pattern){
-try{
-if(navigator.vibrate){
-navigator.vibrate(pattern);
-}
-}catch(e){}
+function vibrate(p){
+try{if(navigator.vibrate) navigator.vibrate(p);}catch(e){}
 }
 
 /* ===== OVERLAY ===== */
-function showOverlay(text, time){
+function showOverlay(text,time){
 document.getElementById("overlayText").innerText=text;
 document.getElementById("overlayLoader").classList.remove("hidden");
 
@@ -397,17 +405,19 @@ document.getElementById("overlayLoader").classList.add("hidden");
 },time);
 }
 
-/* ===== ENTER APP ===== */
+/* ===== THEME ===== */
+function toggleThemePopup(){
+let p=document.getElementById("themePopup");
+p.style.display = p.style.display==="block"?"none":"block";
+}
+
+/* ===== ENTER ===== */
 function enterApp(user){
 
 selectedUser=user;
-
 document.getElementById("activeUser").innerHTML="🍲 "+user;
 
-/* short haptic */
 vibrate(50);
-
-/* overlay transition */
 showOverlay("Get ready to put your Chef's hat on 🧑🏼‍🍳",2000);
 
 setTimeout(()=>{
@@ -417,9 +427,9 @@ swap("landingPage","mainPage");
 }
 
 /* ===== NAV ===== */
-function swap(from,to){
-document.getElementById(from).classList.remove("active");
-document.getElementById(to).classList.add("active");
+function swap(a,b){
+document.getElementById(a).classList.remove("active");
+document.getElementById(b).classList.add("active");
 }
 
 function goBack(){
@@ -427,87 +437,51 @@ resetAll();
 swap("mainPage","landingPage");
 }
 
-/* ===== SELECTIONS ===== */
-function selectMood(btn,m){clear("#moodButtons");btn.classList.add("selected");selectedMood=m;}
-function selectEnergy(btn,m){clear("#energyButtons");btn.classList.add("selected");selectedEnergy=m;}
-function selectPrep(btn,m){clear("#prepButtons");btn.classList.add("selected");prepStatus=m;}
-function selectLunch(btn,m){clear("#lunchButtons");btn.classList.add("selected");lunchNeeded=m;}
+/* ===== SELECTIONS (NOW WITH HAPTICS) ===== */
+function selectMood(b,v){clear("#moodButtons");b.classList.add("selected");selectedMood=v;vibrate(30);}
+function selectEnergy(b,v){clear("#energyButtons");b.classList.add("selected");selectedEnergy=v;vibrate(30);}
+function selectPrep(b,v){clear("#prepButtons");b.classList.add("selected");prepStatus=v;vibrate(30);}
+function selectLunch(b,v){clear("#lunchButtons");b.classList.add("selected");lunchNeeded=v;vibrate(30);}
 
 function clear(id){
-document.querySelectorAll(id+" button")
-.forEach(b=>b.classList.remove("selected"));
+document.querySelectorAll(id+" button").forEach(x=>x.classList.remove("selected"));
 }
 
 function resetAll(){
-selectedMood="";
-selectedEnergy="";
-prepStatus="";
-lunchNeeded=false;
+selectedMood="";selectedEnergy="";prepStatus="";lunchNeeded=false;
 document.querySelectorAll(".selected").forEach(x=>x.classList.remove("selected"));
 document.getElementById("results").innerHTML="";
 }
 
-/* ===== RECOMMEND ===== */
+/* ===== GENERATE ===== */
 function generateRecommendations(){
 
 vibrate([200,100,200]);
-
 showOverlay("🍛 Checking with the dinner gods",2000);
 
 setTimeout(()=>{
+
+let meals=[
+"Egg Fried Rice","Moong Dal Chila","Pav Bhaji","Bhindi Sabzi",
+"Paneer Gravy","Veg Pasta","Egg Curry","Veg Maggi","Lauki Sabzi","Palak Paneer"
+];
 
 let pick=meals.sort(()=>0.5-Math.random()).slice(0,3);
 
 let html="";
 
 pick.forEach((m,i)=>{
-
 html+=`
 <div class="recommendation">
 <div class="meal-title">${["🥇","🥈","🥉"][i]} ${m}</div>
 <div class="reason">A strong match for tonight.</div>
-<button class="ate-btn" onclick="saveMeal('${m}')">We Ate This</button>
-</div>
-`;
+</div>`;
 });
 
 document.getElementById("results").innerHTML=html;
 
 },2000);
-
 }
-
-/* ===== HISTORY ===== */
-function saveMeal(meal){
-
-let history=JSON.parse(localStorage.getItem("mealHistory")||"[]");
-
-let today=new Date().toDateString();
-
-history.unshift({name:meal,day:today,date:new Date().toLocaleString()});
-
-history=history.slice(0,5);
-
-localStorage.setItem("mealHistory",JSON.stringify(history));
-
-renderHistory();
-
-alert(meal+" saved 🍲");
-
-}
-
-function renderHistory(){
-
-let history=JSON.parse(localStorage.getItem("mealHistory")||"[]");
-
-document.getElementById("history").innerHTML=
-history.length ?
-history.map(h=>`<div class="history-item"><strong>${h.name}</strong><br><small>${h.date}</small></div>`).join("")
-: "No meals yet.";
-
-}
-
-window.onload=renderHistory;
 
 </script>
 
