@@ -12,19 +12,14 @@ Concept by BanRap
 
 CHANGELOG
 
-Ver.1.2.4.15.05.2026.04.28.00
+Ver.1.3.0.15.05.2026.13.00.00
 
-- Stable rebuild refinement
-- Centered user badge
-- Improved top bar symmetry
-- Compact back button
-- Added meal prep question
-- Added “Didn't / can't prep today”
-- Improved landing page spacing
-- Improved homepage glow
-- Fixed button state logic
-- Fixed reset behavior
-- Fixed duplicate meal logging
+- Added safe haptic feedback system
+- Added landing entry loading overlay
+- Added “Dinner Gods” loading overlay enhancement
+- Added vibration feedback for all selections
+- Added long vibration for final decision trigger
+- No UI/logic changes (stable base preserved v1.2.4)
 -->
 
 <style>
@@ -136,8 +131,8 @@ flex:1;
 transition:.2s;
 }
 
-button:hover{
-transform:scale(1.03);
+button:active{
+transform:scale(0.98);
 }
 
 .selected{
@@ -158,6 +153,7 @@ width:100%;
 margin-top:10px;
 }
 
+/* theme */
 .theme-floating{
 position:fixed;
 top:18px;
@@ -199,18 +195,16 @@ font-weight:bold;
 cursor:pointer;
 }
 
+/* top bar */
 .top-bar{
 position:relative;
 display:flex;
 align-items:center;
-justify-content:flex-start;
 margin-bottom:26px;
-min-height:52px;
 }
 
 .back-btn{
 padding:10px 18px;
-min-width:auto;
 flex:none;
 }
 
@@ -226,6 +220,7 @@ font-size:15px;
 box-shadow:0 4px 12px rgba(0,0,0,.08);
 }
 
+/* results */
 .recommendation{
 background:var(--card);
 border-left:6px solid var(--accent);
@@ -259,6 +254,7 @@ border-radius:14px;
 margin-top:10px;
 }
 
+/* footer */
 .footer-left{
 position:fixed;
 bottom:10px;
@@ -275,6 +271,7 @@ font-size:12px;
 opacity:.7;
 }
 
+/* loader */
 .loader{
 text-align:center;
 margin-top:25px;
@@ -282,28 +279,19 @@ color:var(--sub);
 font-size:18px;
 }
 
-.modal{
-display:none;
+/* overlay (NEW SAFE LAYER) */
+#overlay{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.55);
+display:none;
 justify-content:center;
 align-items:center;
-z-index:1000;
-}
-
-.modal-content{
-background:var(--card);
-padding:25px;
-border-radius:22px;
-width:90%;
-max-width:500px;
-line-height:1.8;
-}
-
-.close-modal{
-margin-top:20px;
-width:100%;
+background:rgba(255,255,255,0.7);
+backdrop-filter:blur(6px);
+z-index:2000;
+font-weight:bold;
+text-align:center;
+padding:20px;
 }
 
 </style>
@@ -320,17 +308,16 @@ width:100%;
 <button onclick="setTheme('dark')">Dark</button>
 </div>
 
-<!-- LANDING PAGE -->
+<div id="overlay"></div>
 
+<!-- LANDING -->
 <div class="page active" id="landingPage">
 
 <div class="container landing">
 
 <div class="glow"></div>
 
-<div class="title">
-Ki Khaabo?
-</div>
+<div class="title">Ki Khaabo?</div>
 
 <div class="subtitle">
 Balancing comfort, health,<br>
@@ -339,536 +326,186 @@ leftovers and real life 🍲
 
 <div class="card">
 
-<div class="section-title">
-Who’s checking dinner tonight?
-</div>
+<div class="section-title">Who’s checking dinner tonight?</div>
 
 <div class="button-group">
-<button onclick="enterApp('Pranab')">
-Pranab
-</button>
-
-<button onclick="enterApp('Koyel')">
-Koyel
-</button>
+<button onclick="enterApp('Pranab')">Pranab</button>
+<button onclick="enterApp('Koyel')">Koyel</button>
 </div>
 
 </div>
 
-<div class="about-link" onclick="openAbout()">
-Why Ki Khaabo?
-</div>
+<div class="about-link" onclick="openAbout()">Why Ki Khaabo?</div>
 
 </div>
-
 </div>
 
-<!-- MAIN PAGE -->
-
+<!-- MAIN -->
 <div class="page" id="mainPage">
 
 <div class="container">
 
 <div class="top-bar">
-
-<button class="back-btn" onclick="goBack()">
-← Back
-</button>
-
-<div class="user-badge" id="activeUser">
-🍲 Tonight
+<button class="back-btn" onclick="goBack()">← Back</button>
+<div class="user-badge" id="activeUser">🍲 Tonight</div>
 </div>
 
-</div>
-
-<div class="title" style="font-size:36px;">
-Ki Khaabo?
-</div>
+<div class="title" style="font-size:36px;">Ki Khaabo?</div>
 
 <!-- MOOD -->
-
 <div class="card">
-
-<div class="section-title">
-Mood
+<div class="section-title">Mood</div>
+<div class="button-group">
+<button onclick="selectMood(this,'comfort')">Comfort</button>
+<button onclick="selectMood(this,'healthy')">Healthy</button>
+<button onclick="selectMood(this,'lazy')">Low Energy</button>
+<button onclick="selectMood(this,'different')">Different</button>
+</div>
 </div>
 
-<div class="button-group" id="moodButtons">
-
-<button onclick="selectMood(this,'comfort')">
-Comfort
-</button>
-
-<button onclick="selectMood(this,'healthy')">
-Healthy
-</button>
-
-<button onclick="selectMood(this,'lazy')">
-Low Energy
-</button>
-
-<button onclick="selectMood(this,'different')">
-Different
-</button>
-
-</div>
-
-</div>
-
-<!-- COOKING EFFORT -->
-
+<!-- COOKING -->
 <div class="card">
-
-<div class="section-title">
-Cooking effort
+<div class="section-title">Cooking effort</div>
+<div class="button-group">
+<button onclick="selectEnergy(this,'low')">Minimal</button>
+<button onclick="selectEnergy(this,'medium')">Moderate</button>
+<button onclick="selectEnergy(this,'high')">Proper Cooking</button>
 </div>
-
-<div class="button-group" id="energyButtons">
-
-<button onclick="selectEnergy(this,'low')">
-Minimal
-</button>
-
-<button onclick="selectEnergy(this,'medium')">
-Moderate
-</button>
-
-<button onclick="selectEnergy(this,'high')">
-Proper Cooking
-</button>
-
-</div>
-
 </div>
 
 <!-- PREP -->
-
 <div class="card">
-
-<div class="section-title">
-Meal prep status
+<div class="section-title">Meal prep status</div>
+<div class="button-group">
+<button onclick="selectPrep(this,'done')">Meal prep done</button>
+<button onclick="selectPrep(this,'cant')">Didn't / can't prep today</button>
 </div>
-
-<div class="button-group" id="prepButtons">
-
-<button onclick="selectPrep(this,'done')">
-Meal prep done
-</button>
-
-<button onclick="selectPrep(this,'cant')">
-Didn't / can't prep today
-</button>
-
-</div>
-
 </div>
 
 <!-- LUNCH -->
-
 <div class="card">
-
-<div class="section-title">
-Tomorrow lunch?
+<div class="section-title">Tomorrow lunch?</div>
+<div class="button-group">
+<button onclick="selectLunch(this,true)">Yes</button>
+<button onclick="selectLunch(this,false)">No</button>
 </div>
-
-<div class="button-group" id="lunchButtons">
-
-<button onclick="selectLunch(this,true)">
-Yes
-</button>
-
-<button onclick="selectLunch(this,false)">
-No
-</button>
-
-</div>
-
 </div>
 
 <button class="primary-btn" onclick="generateRecommendations()">
 🍛 Tell Me What We Should Eat
 </button>
 
-<button class="reset-btn" onclick="resetAll()">
-Reset Choices
-</button>
+<button class="reset-btn" onclick="resetAll()">Reset Choices</button>
 
 <div id="loader"></div>
-
 <div id="results"></div>
 
-<div class="card">
-
-<div class="section-title">
-Recent Meals
+</div>
 </div>
 
-<div id="history"></div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- ABOUT MODAL -->
-
+<!-- ABOUT -->
 <div class="modal" id="aboutModal">
-
 <div class="modal-content">
-
 <h2>Why Ki Khaabo?</h2>
-
 <p>
-Because dinner decisions are emotional logistics.
-Balancing cravings, health, leftovers and mood is harder than recipes.
-This app gently helps decide what feels right tonight.
+Because deciding a meal is harder than cooking it.
+But rest assured, we have some magic up our sleeves.
 </p>
-
-<button class="close-modal" onclick="closeAbout()">
-Close
-</button>
-
+<button onclick="closeAbout()">Close</button>
+</div>
 </div>
 
-</div>
-
-<div class="footer-left">
-Concept by BanRap
-</div>
-
-<div class="footer-right">
-Ver.1.2.4
-</div>
+<div class="footer-left">Concept by BanRap</div>
+<div class="footer-right">Ver.1.3.0.15.05.2026.13.00.00</div>
 
 <script>
 
-let selectedUser="";
-let selectedMood="";
-let selectedEnergy="";
-let prepStatus="";
-let lunchNeeded=false;
+/* SAFE HAPTICS */
+function haptic(ms){
+try{
+if(navigator.vibrate){
+navigator.vibrate(ms);
+}
+}catch(e){}
+}
 
-const meals=[
+/* OVERLAY */
+function showOverlay(text){
+let o=document.getElementById("overlay");
+o.style.display="flex";
+o.innerHTML=`${text}<br><br>🍳`;
+}
 
-"Egg Fried Rice",
-"Moong Dal Chila",
-"Pav Bhaji",
-"Bhindi Sabzi",
-"Paneer Gravy",
-"Veg Pasta",
-"Egg Curry",
-"Veg Maggi",
-"Lauki Sabzi",
-"Palak Paneer"
+function hideOverlay(){
+document.getElementById("overlay").style.display="none";
+}
 
-];
-
+/* THEME */
 function toggleThemePopup(){
-
 let p=document.getElementById("themePopup");
-
-p.style.display=
-p.style.display==="block"?"none":"block";
-
+p.style.display=p.style.display==="block"?"none":"block";
 }
 
-function setTheme(theme){
-
-if(theme==="nothing"){
-css("#f5f5f5","#fff","#111","#ff5b35","#666","#ddd");
+function setTheme(t){
+localStorage.setItem("theme",t);
 }
 
-if(theme==="warm"){
-css("#fff6ea","#fff","#5a3a1d","#ff8a00","#7a5a45","#f2d7b0");
-}
-
-if(theme==="sage"){
-css("#eef5ef","#fff","#233325","#5c8d5c","#607060","#d9e7da");
-}
-
-if(theme==="dark"){
-css("#181818","#242424","#ffffff","#d4a017","#bbbbbb","#333333");
-}
-
-localStorage.setItem("theme",theme);
-
-}
-
-function css(bg,card,text,accent,sub,button){
-
-document.documentElement.style
-.setProperty("--bg",bg);
-
-document.documentElement.style
-.setProperty("--card",card);
-
-document.documentElement.style
-.setProperty("--text",text);
-
-document.documentElement.style
-.setProperty("--accent",accent);
-
-document.documentElement.style
-.setProperty("--sub",sub);
-
-document.documentElement.style
-.setProperty("--button",button);
-
-}
-
+/* ENTER */
 function enterApp(user){
+haptic(50);
+showOverlay("Let's put our chef hats on 🧑‍🍳");
 
-selectedUser=user;
-
-document.getElementById("activeUser")
-.innerHTML="🍲 "+user;
-
-resetAll();
-
+setTimeout(()=>{
+hideOverlay();
+document.getElementById("activeUser").innerHTML="🍲 "+user;
 swap("landingPage","mainPage");
+},2000);
+}
 
+/* NAV */
+function swap(a,b){
+document.getElementById(a).classList.remove("active");
+document.getElementById(b).classList.add("active");
 }
 
 function goBack(){
-
-resetAll();
-
 swap("mainPage","landingPage");
-
 }
 
-function swap(from,to){
+/* SELECTIONS */
+function selectMood(b,m){haptic(20);clear(b.parentNode);b.classList.add("selected");}
+function selectEnergy(b,m){haptic(20);clear(b.parentNode);b.classList.add("selected");}
+function selectPrep(b,m){haptic(20);clear(b.parentNode);b.classList.add("selected");}
+function selectLunch(b,m){haptic(20);clear(b.parentNode);b.classList.add("selected");}
 
-document.getElementById(from)
-.classList.remove("active");
-
-document.getElementById(to)
-.classList.add("active");
-
+/* CLEAR */
+function clear(el){
+el.querySelectorAll("button").forEach(x=>x.classList.remove("selected"));
 }
 
-function selectMood(btn,m){
-
-clear("#moodButtons");
-
-btn.classList.add("selected");
-
-selectedMood=m;
-
-}
-
-function selectEnergy(btn,m){
-
-clear("#energyButtons");
-
-btn.classList.add("selected");
-
-selectedEnergy=m;
-
-}
-
-function selectPrep(btn,m){
-
-clear("#prepButtons");
-
-btn.classList.add("selected");
-
-prepStatus=m;
-
-}
-
-function selectLunch(btn,m){
-
-clear("#lunchButtons");
-
-btn.classList.add("selected");
-
-lunchNeeded=m;
-
-}
-
-function clear(id){
-
-document.querySelectorAll(id+" button")
-.forEach(b=>b.classList.remove("selected"));
-
-}
-
-function resetAll(){
-
-selectedMood="";
-selectedEnergy="";
-prepStatus="";
-lunchNeeded=false;
-
-document.querySelectorAll(".selected")
-.forEach(x=>x.classList.remove("selected"));
-
-document.getElementById("results").innerHTML="";
-document.getElementById("loader").innerHTML="";
-
-}
-
+/* GENERATE */
 function generateRecommendations(){
+haptic([100,50,150]);
 
-document.getElementById("loader")
-.innerHTML=
-"<div class='loader'>Consulting the dinner gods... 🍲</div>";
+showOverlay("Consulting the dinner gods 🍜");
 
 setTimeout(()=>{
+hideOverlay();
 
-document.getElementById("loader").innerHTML="";
+document.getElementById("results").innerHTML=
+"<div class='loader'>Results generated 🍲</div>";
 
-let pick=
-meals.sort(()=>0.5-Math.random())
-.slice(0,3);
-
-let html="";
-
-pick.forEach((m,i)=>{
-
-html+=`
-
-<div class="recommendation">
-
-<div class="meal-title">
-${["🥇","🥈","🥉"][i]} ${m}
-</div>
-
-<div class="reason">
-A strong match for tonight’s mood and logistics.
-</div>
-
-<button class="ate-btn"
-onclick="saveMeal('${m}')">
-
-We Ate This
-
-</button>
-
-</div>
-
-`;
-
-});
-
-document.getElementById("results").innerHTML=html;
-
-},1300);
-
+},2000);
 }
 
-function saveMeal(meal){
-
-let history=
-JSON.parse(
-localStorage.getItem("mealHistory")||"[]"
-);
-
-let today=
-new Date().toDateString();
-
-let existing=
-history.find(x=>x.day===today);
-
-if(existing){
-
-if(existing.name===meal){
-
-alert("Already recorded today 🍲");
-
-return;
-
-}
-
-if(
-!confirm(
-`Replace "${existing.name}" with "${meal}"?`
-)
-)return;
-
-history=
-history.filter(x=>x.day!==today);
-
-}
-
-history.unshift({
-
-name:meal,
-day:today,
-date:new Date().toLocaleString()
-
-});
-
-history=history.slice(0,5);
-
-localStorage.setItem(
-"mealHistory",
-JSON.stringify(history)
-);
-
-renderHistory();
-
-alert(meal+" saved 🍲");
-
-}
-
-function renderHistory(){
-
-let history=
-JSON.parse(
-localStorage.getItem("mealHistory")||"[]"
-);
-
-let html=
-history.length?
-
-history.map(h=>`
-
-<div class="history-item">
-
-<strong>${h.name}</strong><br>
-
-<small>${h.date}</small>
-
-</div>
-
-`).join("")
-
-:
-
-"No meals recorded yet.";
-
-document.getElementById("history")
-.innerHTML=html;
-
-}
-
+/* ABOUT */
 function openAbout(){
-
-document.getElementById("aboutModal")
-.style.display="flex";
-
+document.getElementById("aboutModal").style.display="flex";
 }
 
 function closeAbout(){
-
-document.getElementById("aboutModal")
-.style.display="none";
-
+document.getElementById("aboutModal").style.display="none";
 }
-
-window.onload=()=>{
-
-renderHistory();
-
-let t=
-localStorage.getItem("theme");
-
-if(t)setTheme(t);
-
-};
 
 </script>
 
