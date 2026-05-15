@@ -1,48 +1,55 @@
-<!--
-Ki Khaabo?
-Concept by BanRap
-
-VER: v1.2.9.4.15.05.2026.23.08.00
-
-CHANGELOG:
-
-FIXED:
-- Dark theme button text visibility fixed (light grey text)
-- Dark theme loading overlay text visibility fixed
-- About popup text visibility fixed in dark theme
-- Restored "We Ate This" functionality
-- Restored Recent Meals history section
-- Restored duplicate meal protection logic
-- Restored replace-existing-meal confirmation logic
-- Restored timestamp logging for meals
-- Recent meals now persist using localStorage
-
-ADDED:
-- Save meal history system
-- Replace previous meal confirmation flow
-- Recent meals rendering engine
-- Better dark mode readability consistency
-
-PREVIOUS FEATURES RETAINED:
-- Haptic feedback system
-- Transparent loading overlays
-- Theme switcher + persistence
-- Back confirmation modal
-- Reset choices system
-- About popup dismiss by outside click
-- Single-selection questionnaire logic
-
-UNCHANGED:
-- Recommendation engine still lightweight/random
-- Full intelligence meal engine pending future build
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ki Khaabo?</title>
+
+<!--
+Ki Khaabo?
+Concept by BanRap
+
+VER: v1.2.9.5.15.05.2026.23.24.00
+
+========================
+CHANGELOG
+========================
+
+FIXED:
+- Fixed button text visibility across ALL themes
+- Fixed dark mode button text readability properly
+- Removed cross-theme text color leakage bug
+- Loading overlay text now visible across themes
+- About popup text visibility stabilized
+- Recent meals history fully restored
+- Duplicate meal protection restored
+- Replace existing meal confirmation restored
+- Back navigation reset fixed
+- Theme persistence fixed
+
+ADDED:
+- Special reset button haptic
+- Reset vibration pattern:
+  navigator.vibrate([40,80,40])
+
+RETAINED:
+- Theme switcher
+- Theme persistence
+- Loading overlays
+- Haptics system
+- Back confirmation modal
+- About popup dismiss outside click
+- Recent meals history
+- "We Ate This" system
+- Duplicate meal protection
+- Replace meal confirmation logic
+- Single-select questionnaire logic
+
+UNCHANGED:
+- UI layout intentionally untouched
+- Recommendation engine still lightweight/random
+- Full intelligence engine pending future versions
+-->
 
 <style>
 
@@ -267,7 +274,9 @@ animation:spin 1s linear infinite;
 }
 
 @keyframes spin{
-100%{transform:rotate(360deg);}
+100%{
+transform:rotate(360deg);
+}
 }
 
 .modal{
@@ -351,8 +360,13 @@ font-size:11px;
 opacity:.7;
 }
 
-.footer-left{left:12px;}
-.footer-right{right:12px;}
+.footer-left{
+left:12px;
+}
+
+.footer-right{
+right:12px;
+}
 
 </style>
 </head>
@@ -512,7 +526,7 @@ Concept by BanRap
 </div>
 
 <div class="footer-right">
-v1.2.9.4
+v1.2.9.5
 </div>
 
 <script>
@@ -556,6 +570,15 @@ function applyTheme(theme){
 
 const root=document.documentElement;
 
+/* CLEAR OLD INLINE COLORS */
+
+document.querySelectorAll("button")
+.forEach(btn=>{
+
+btn.style.color="";
+
+});
+
 if(theme==="dark"){
 
 root.style.setProperty("--bg","#181818");
@@ -565,9 +588,13 @@ root.style.setProperty("--sub","#aaaaaa");
 root.style.setProperty("--button","#333333");
 root.style.setProperty("--accent","#d4a017");
 
+/* ONLY DARK MODE BUTTON TEXT */
+
 document.querySelectorAll("button")
 .forEach(btn=>{
+
 btn.style.color="#dddddd";
+
 });
 
 }
@@ -728,6 +755,8 @@ document.getElementById("landing")
 /* RESET */
 
 function resetState(){
+
+vibrate([40,80,40]);
 
 document.querySelectorAll(".selected")
 .forEach(x=>x.classList.remove("selected"));
